@@ -28,7 +28,7 @@ edit(f::Function, pkg, args...) = Dir.cd() do
     r_ = f(r,pkg,args...)
     r_ == r && return info("Nothing to be done.")
     reqs_ = Reqs.parse(r_)
-    reqs_ != reqs && resolve(reqs_,avail)
+    reqs_ != reqs && _resolve(reqs_,avail)
     Reqs.write("REQUIRE",r_)
     info("REQUIRE updated.")
 end
@@ -88,7 +88,7 @@ clone(url::String, pkg::String=urlpkg(url); opts::Cmd=``) = Dir.cd() do
     end
     isempty(Reqs.parse("$pkg/REQUIRE")) && return info("Nothing to be done.")
     info("Computing changes...")
-    resolve()
+    _resolve()
 end
 
 function init(meta::String)
@@ -119,14 +119,14 @@ function init(meta::String)
             cd(Git.autoconfig_pushurl,"METADATA")
             Metadata.gen_hashes()
         end
-        resolve()
+        _resolve()
     end
 end
 
 checkout(pkg::String, branch::String="master"; force::Bool=false) = Dir.cd() do
     ispath(pkg,".git") || error("$pkg is not a git repo")
     info("Checking out $pkg $branch...")
-    checkout(pkg,branch,force)
+    _checkout(pkg,branch,force)
 end
 
 release(pkg::String; force::Bool=false) = Dir.cd() do
@@ -140,10 +140,10 @@ release(pkg::String; force::Bool=false) = Dir.cd() do
     for ver in vers
         sha1 = avail[ver].sha1
         Git.iscommit(sha1, dir=pkg) || continue
-        return checkout(pkg,sha1,force)
+        return _checkout(pkg,sha1,force)
     end
     Write.update(pkg,vers[1])
-    resolve()
+    _resolve()
 end
 
 update() = Dir.cd() do
@@ -182,17 +182,16 @@ update() = Dir.cd() do
         end
     end
     info("Computing changes...")
-    resolve(Reqs.parse("REQUIRE"), avail, instd, fixed, free)
+    _resolve(Reqs.parse("REQUIRE"), avail, instd, fixed, free)
 end
 
-resolve(
-    reqs  :: Dict,
-    avail :: Dict = Dir.cd(Read.available),
-    instd :: Dict = Dir.cd(()->Read.installed(avail)),
-    fixed :: Dict = Dir.cd(()->Read.fixed(avail,instd)),
-    have  :: Dict = Dir.cd(()->Read.free(instd))
-) = Dir.cd() do
-
+function _resolve(
+    reqs  :: Dict = Reqs.parse("REQUIRE"),
+    avail :: Dict = Read.available(),
+    instd :: Dict = Read.installed(avail),
+    fixed :: Dict = Read.fixed(avail,instd),
+    have  :: Dict = Read.free(instd),
+)
     reqs = Query.requirements(reqs,fixed)
     deps = Query.dependencies(avail,fixed)
 
@@ -265,10 +264,12 @@ resolve(
     installed
     # Since we just changed a lot of things, it's probably better to reread
     # the state, so only pass avail
-    fixup(String[pkg for (pkg,_) in filter(x->x[2][2]!=nothing,changes)],avail)
+    _fixup(String[pkg for (pkg,_) in filter(x->x[2][2]!=nothing,changes)], avail)
 end
 
-function build(pkg,args=[])
+resolve() = Dir.cd(_resolve)
+
+function build(pkg::String, args=[])
     try 
         path = Dir.path(pkg,"deps","build.jl")
         if isfile(path)
@@ -288,10 +289,6 @@ function build(pkg,args=[])
         rethrow()
     end
     true
-end
-
-resolve() = Dir.cd() do
-    resolve(Reqs.parse("REQUIRE"))
 end
 
 # Metadata sanity check
@@ -314,13 +311,13 @@ check_metadata(julia_version::VersionNumber=VERSION) = Dir.cd() do
 end
 check_metadata(julia_version::String) = check_metadata(convert(VersionNumber, julia_version))
 
-function _fixup(
+function __fixup(
     instlist,
-    avail=Dir.cd(Read.available),
-    inst::Dict=Dir.cd(()->Read.installed(avail)),
-    free::Dict=Dir.cd(()->Read.free(inst)),
-    fixed::Dict=Dir.cd(()->Read.fixed(avail,inst));
-    exclude=[]
+    avail :: Dict = Read.available(),
+    inst  :: Dict = Read.installed(avail),
+    free  :: Dict = Read.free(inst),
+    fixed :: Dict = Read.fixed(avail,inst);
+    exclude = []
 )
     sort!(instlist, lt=function(a,b)
         c = contains(Read.alldependencies(a,avail,free,fixed),b) 
@@ -333,13 +330,13 @@ function _fixup(
     end
 end
 
-function fixup{T<:String}(
+function _fixup{T<:String}(
     pkg::Vector{T},
-    avail::Dict=Dir.cd(Read.available),
-    inst::Dict=Dir.cd(()->Read.installed(avail)),
-    free::Dict=Dir.cd(()->Read.free(inst)),
-    fixed::Dict=Dir.cd(()->Read.fixed(avail,inst));
-    exclude=[]
+    avail :: Dict = Read.available(),
+    inst  :: Dict = Read.installed(avail),
+    free  :: Dict = Read.free(inst),
+    fixed :: Dict = Read.fixed(avail,inst);
+    exclude = []
 )
     tofixup = copy(pkg)
     oldlength = length(tofixup)
@@ -356,28 +353,30 @@ function fixup{T<:String}(
         oldlength == length(tofixup) && break
         oldlength = length(tofixup)
     end
-    _fixup(tofixup, avail, inst, free, fixed; exclude=exclude)
+    __fixup(tofixup, avail, inst, free, fixed; exclude=exclude)
 end
 
 fixup(
     pkg::String,
-    avail::Dict=Dir.cd(Read.available),
-    inst::Dict=Dir.cd(()->Read.installed(avail)),
-    free::Dict=Dir.cd(()->Read.free(inst)),
-    fixed::Dict=Dir.cd(()->Read.fixed(avail,inst));
+    avail :: Dict = Read.available(),
+    inst  :: Dict = Read.installed(avail),
+    free  :: Dict = Read.free(inst),
+    fixed :: Dict = Read.fixed(avail,inst);
     exclude = []
-) = fixup([pkg],avail,inst,free,fixed; exclude=exclude)
+) = fixup([pkg], avail, inst, free, fixed; exclude=exclude)
 
-function fixup(
-    avail::Dict=Dir.cd(Read.available),
-    inst::Dict=Dir.cd(()->Read.installed(avail)),
-    free::Dict=Dir.cd(()->Read.free(inst)),
-    fixed::Dict=Dir.cd(()->Read.fixed(avail,inst));
-    exclude=[]
+function _fixup(
+    avail :: Dict = Read.available(),
+    inst  :: Dict = Read.installed(avail),
+    free  :: Dict = Read.free(inst),
+    fixed :: Dict = Read.fixed(avail,inst);
+    exclude = []
 )
     # TODO: Replace by proper toposorts
     instlist = [k for (k,v) in inst]
     _fixup(instlist, avail, inst, free, fixed; exclude=exclude)
 end
+
+fixup() = Dir.cd(_fixup)
 
 end # module
