@@ -261,7 +261,7 @@ resolve(
     fixup(String[pkg for (pkg,_) in filter(x->x[2][2]!=nothing,changes)],avail)
 end
 
-function runbuildscript(pkg,args=[])
+function build(pkg,args=[])
     try 
         path = Dir.path(pkg,"deps","build.jl")
         if isfile(path)
@@ -322,7 +322,7 @@ function _fixup(
     end)
     for p in instlist
         contains(exclude,p) && continue
-        runbuildscript(p,["fixup"]) || return
+        build(p,["fixup"]) || return
     end
 end
 
