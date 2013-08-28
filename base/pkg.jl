@@ -122,14 +122,15 @@ function init(meta::String)
             cd(Git.autoconfig_pushurl,"METADATA")
             Metadata.gen_hashes()
         end
+        merge && Git.run(`merge -q --ff-only $what`, dir=pkg)
         _resolve()
     end
 end
 
-checkout(pkg::String, branch::String="master"; force::Bool=false) = Dir.cd() do
+checkout(pkg::String, branch::String="master"; force::Bool=false, merge::Bool=true) = Dir.cd() do
     ispath(pkg,".git") || error("$pkg is not a git repo")
     info("Checking out $pkg $branch...")
-    _checkout(pkg,branch,force)
+    _checkout(pkg,branch,merge,force)
 end
 
 release(pkg::String; force::Bool=false) = Dir.cd() do
@@ -140,13 +141,14 @@ release(pkg::String; force::Bool=false) = Dir.cd() do
     info("Releasing $pkg...")
     avail = avail[pkg]
     vers = sort!([keys(avail)...], rev=true)
-    for ver in vers
-        sha1 = avail[ver].sha1
-        Git.iscommit(sha1, dir=pkg) || continue
-        return _checkout(pkg,sha1,force)
+    while true
+        for ver in vers
+            sha1 = avail[ver].sha1
+            Git.iscommit(sha1, dir=pkg) || continue
+            return _checkout(pkg,sha1,false,force)
+        end
+        Cache.prefetch(pkg, Read.url(pkg), [a.sha1 for (v,a)=avail])
     end
-    Write.update(pkg,vers[1])
-    _resolve()
 end
 
 update() = Dir.cd() do
