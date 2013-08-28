@@ -127,25 +127,24 @@ function init(meta::String)
     end
 end
 
-checkout(pkg::String, branch::String="master"; force::Bool=false, merge::Bool=true) = Dir.cd() do
+checkout(pkg::String, branch::String="master"; merge::Bool=true) = Dir.cd() do
     ispath(pkg,".git") || error("$pkg is not a git repo")
     info("Checking out $pkg $branch...")
-    _checkout(pkg,branch,merge,force)
+    _checkout(pkg,branch,merge)
 end
 
-release(pkg::String; force::Bool=false) = Dir.cd() do
-    ispath(pkg,".git") || error("$pkg is not a git repo")
-    avail = Dir.cd(Read.available)
-    haskey(avail,pkg) || error("$pkg is not registered")
-    force || Git.dirty(dir=pkg) && error("$pkg is dirty, bailing")
+release(pkg::String) = Dir.cd() do
+    Read.isinstalled(pkg) || error("$pkg cannot be released – not an installed package")
+    avail = Read.available(pkg)
+    isempty(avail) && error("$pkg cannot be released – not a registered package")
+    Git.dirty(dir=pkg) && error("$pkg cannot be released – repo is dirty")
     info("Releasing $pkg...")
-    avail = avail[pkg]
     vers = sort!([keys(avail)...], rev=true)
     while true
         for ver in vers
             sha1 = avail[ver].sha1
             Git.iscommit(sha1, dir=pkg) || continue
-            return _checkout(pkg,sha1,false,force)
+            return _checkout(pkg,sha1)
         end
         isempty(Cache.prefetch(pkg, Read.url(pkg), [a.sha1 for (v,a)=avail])) && continue
         error("can't find any registered versions of $pkg to checkout")
