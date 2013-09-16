@@ -139,15 +139,19 @@ function init(meta::String)
             Metadata.gen_hashes()
         end
         merge && Git.run(`merge -q --ff-only $what`, dir=pkg)
+        if pull
+            info("Pulling $pkg latest $what...")
+            Git.run(`pull -q --ff-only`, dir=pkg)
+        end
         _resolve()
         #4082 TODO: some call to fixup should go here
     end
 end
 
-checkout(pkg::String, branch::String="master"; merge::Bool=true) = Dir.cd() do
+checkout(pkg::String, branch::String="master"; merge::Bool=true, pull::Bool=false) = Dir.cd() do
     ispath(pkg,".git") || error("$pkg is not a git repo")
     info("Checking out $pkg $branch...")
-    _checkout(pkg,branch,merge)
+    _checkout(pkg,branch,merge,pull)
 end
 
 release(pkg::String) = Dir.cd() do
