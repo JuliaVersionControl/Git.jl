@@ -1,24 +1,12 @@
 module Pkg
-
-include("pkg/dir.jl")
-include("pkg/types.jl")
-include("pkg/reqs.jl")
-include("pkg/cache.jl")
-include("pkg/read.jl")
-include("pkg/query.jl")
-include("pkg/resolve.jl")
-include("pkg/write.jl")
-include("pkg/scaffold.jl")
-
+for file in split("dir types reqs cache read query resolve write scaffold entry")
+    include("pkg/$file.jl")
+end
 using .Types
-import Base: Git, thispatch, nextpatch, nextminor, nextmajor, check_new_version
-
+const cd = Dir.cd
 const dir = Dir.path
 const scaffold = Scaffold.scaffold
 
-rm(pkg::String) = edit(Reqs.rm, pkg)
-add(pkg::String, vers::VersionSet) = edit(Reqs.add, pkg, vers)
-add(pkg::String, vers::VersionNumber...) = add(pkg, VersionSet(vers...))
 init(meta::String=Dir.DEFAULT_META) = Dir.init(meta)
 
 edit(f::Function, pkg, args...) = Dir.cd() do
@@ -339,204 +327,37 @@ function write_tag_metadata(pkg::String, ver::VersionNumber, commit::String)
     return nothing
 end
 
-register(pkg::String, url::String) = Dir.cd() do
-    ispath(pkg,".git") || error("$pkg is not a git repo")
-    isfile("METADATA",pkg,"url") && error("$pkg already registered")
-    tags = split(Git.readall(`tag -l v*`, dir=pkg))
-    filter!(tag->ismatch(Base.VERSION_REGEX,tag), tags)
-    versions = [
-        convert(VersionNumber,tag) =>
-        Git.readchomp(`rev-parse --verify $tag^{commit}`, dir=pkg)
-        for tag in tags
-    ]
-    Git.transact(dir="METADATA") do
-        cd("METADATA") do
-            info("Registering $pkg at $url")
-            mkdir(pkg)
-            path = joinpath(pkg,"url")
-            open(io->println(io,url), path, "w")
-            Git.run(`add $path`)
-        end
-        for (ver,commit) in versions
-            write_tag_metadata(pkg,ver,commit)
-        end
-    end
-end
+available() = cd(Entry.available)
+available(pkg::String) = cd(Entry.available,pkg)
 
-function register(pkg::String)
-    d = dir(pkg)
-    Git.success(`config remote.origin.url`, dir=d) || error("$pkg: no URL configured")
-    url = Git.readchomp(`config remote.origin.url`, dir=d)
-    register(pkg,url)
-end
+installed() = cd(Entry.installed)
+installed(pkg::String) = cd(Entry.installed,pkg)
 
-function isrewritable(v::VersionNumber)
-    thispatch(v)==v"0" ||
-    length(v.prerelease)==1 && isempty(v.prerelease[1]) ||
-    length(v.build)==1 && isempty(v.build[1])
-end
+status(io::IO=STDOUT) = cd(Entry.status,io)
 
-nextbump(v::VersionNumber) = isrewritable(v) ? v : nextpatch(v)
+clone(url::String, pkg::String=Entry.url2pkg(url); opts::Cmd=``) =
+    cd(Entry.clone,url,pkg,opts)
 
-tag(pkg::String, ver::Union(Symbol,VersionNumber)=:bump;
-    commit::String="", msg::String="") = Dir.cd() do
-    ispath(pkg,".git") || error("$pkg is not a git repo")
-    Git.dirty(dir=pkg) && error("$pkg is dirty – stash changes to tag")
-    commit = isempty(commit) ? Git.head(dir=pkg) :
-        Git.readchomp(`rev-parse $commit`, dir=pkg)
-    registered = isfile("METADATA",pkg,"url")
-    if registered
-        avail = Read.available(pkg)
-        existing = [keys(Read.available(pkg))...]
-        ancestors = filter(v->Git.is_ancestor_of(avail[v].sha1,commit,dir=pkg), existing)
-    else
-        tags = split(Git.readall(`tag -l v*`, dir=pkg))
-        filter!(tag->ismatch(Base.VERSION_REGEX,tag), tags)
-        existing = VersionNumber[tags...]
-        filter!(tags) do tag
-            sha1 = Git.readchomp(`rev-parse --verify $tag^{commit}`, dir=pkg)
-            Git.is_ancestor_of(sha1,commit,dir=pkg)
-        end
-        ancestors = VersionNumber[tags...]
-    end
-    sort!(existing)
-    if isa(ver,Symbol)
-        prv = isempty(existing) ? v"0" :
-              isempty(ancestors) ? max(existing) : max(ancestors)
-        ver = (ver == :bump ) ? nextbump(prv)  :
-              (ver == :patch) ? nextpatch(prv) :
-              (ver == :minor) ? nextminor(prv) :
-              (ver == :major) ? nextmajor(prv) :
-                                error("invalid version selector: $ver")
-    end
-    rewritable = isrewritable(ver)
-    rewritable && filter!(v->v!=ver,existing)
-    check_new_version(existing,ver)
-    isempty(msg) && (msg = "$pkg v$ver [$(commit[1:10])]")
-    # TODO: check that SHA1 isn't the same as another version
-    opts = rewritable ? `--force` : `--annotate --message $msg`
-    info("Tagging $pkg v$ver")
-    Git.run(`tag $opts v$ver $commit`, dir=pkg, out=DevNull)
-    registered || return
-    try
-        Git.transact(dir="METADATA") do
-            write_tag_metadata(pkg,ver,commit)
-        end
-    catch
-        Git.run(`tag -d v$ver`, dir=pkg)
-        rethrow()
-    end
-end
+checkout(pkg::String, branch::String="master"; merge::Bool=true, pull::Bool=false) =
+    cd(Entry.checkout,pkg,branch,merge,pull)
 
-function build(pkg::String, args=[])
-    try 
-        path = Dir.path(pkg,"deps","build.jl")
-        if isfile(path)
-            info("Running build script for package $pkg")
-            Dir.cd(joinpath(Dir.path(pkg),"deps")) do
-                m = Module(:__anon__)
-                body = Expr(:toplevel,:(ARGS=$args),:(include($path)))
-                eval(m,body)
-            end
-        end
-    catch
-        warn("""
-             An exception occured while building binary dependencies.
-             You may have to take manual steps to complete the installation, see the error message below.
-             To reattempt the installation, run Pkg.fixup("$pkg").
-             """)
-        rethrow()
-    end
-    true
-end
+release(pkg::String) = cd(Entry.release,pkg)
 
-# Metadata sanity check
-check_metadata(julia_version::VersionNumber=VERSION) = Dir.cd() do
-    avail = Read.available()
-    instd = Read.installed(avail)
-    fixed = Read.fixed(avail,instd,julia_version)
-    deps  = Query.dependencies(avail,fixed)
+fix(pkg::String) = cd(Entry.fix,pkg)
+fix(pkg::String, ver::VersionNumber) = cd(Entry.fix,pkg,ver)
 
-    problematic = Resolve.sanity_check(deps)
-    if !isempty(problematic)
-        warning = "Packages with unsatisfiable requirements found:\n"
-        for (p, vn, rp) in problematic
-            warning *= "    $p v$vn : no valid versions exist for package $rp\n"
-        end
-        warn(warning)
-        return false
-    end
-    return true
-end
-check_metadata(julia_version::String) = check_metadata(convert(VersionNumber, julia_version))
+update() = cd(Entry.update)
+resolve() = cd(Entry._resolve)
 
-function __fixup(
-    instlist,
-    avail :: Dict = Read.available(),
-    inst  :: Dict = Read.installed(avail),
-    free  :: Dict = Read.free(inst),
-    fixed :: Dict = Read.fixed(avail,inst);
-    exclude = []
-)
-    sort!(instlist, lt=function(a,b)
-        c = in(b,Read.alldependencies(a,avail,free,fixed))
-        nonordered = (!c && !in(a,Read.alldependencies(b,avail,free,fixed)))
-        nonordered ? a < b : c
-    end)
-    for p in instlist
-        in(p,exclude) && continue
-        build(p,["fixup"]) || return
-    end
-end
+register(pkg::String) = cd(Entry.register,pkg)
+register(pkg::String, url::String) = cd(Entry.register,pkg,url)
 
-function _fixup{T<:String}(
-    pkg::Vector{T},
-    avail :: Dict = Read.available(),
-    inst  :: Dict = Read.installed(avail),
-    free  :: Dict = Read.free(inst),
-    fixed :: Dict = Read.fixed(avail,inst);
-    exclude = []
-)
-    tofixup = copy(pkg)
-    oldlength = length(tofixup)
-    while true
-        for (p,_) in inst
-            in(p,tofixup) && continue
-            for pf in tofixup
-                if in(pf,Read.alldependencies(p,avail,free,fixed))
-                    push!(tofixup,p)
-                    break
-                end
-            end
-        end
-        oldlength == length(tofixup) && break
-        oldlength = length(tofixup)
-    end
-    __fixup(tofixup, avail, inst, free, fixed; exclude=exclude)
-end
+tag(pkg::String, sym::Symbol=:bump; commit::String="", msg::String="") =
+    cd(Entry.tag,pkg,sym,commit,msg)
+tag(pkg::String, ver::VersionNumber; commit::String="", msg::String="") =
+    cd(Entry.tag,pkg,ver,commit,msg)
 
-_fixup(
-    pkg::String,
-    avail :: Dict = Read.available(),
-    inst  :: Dict = Read.installed(avail),
-    free  :: Dict = Read.free(inst),
-    fixed :: Dict = Read.fixed(avail,inst);
-    exclude = []
-) = _fixup([pkg], avail, inst, free, fixed; exclude=exclude)
-
-function _fixup(
-    avail :: Dict = Read.available(),
-    inst  :: Dict = Read.installed(avail),
-    free  :: Dict = Read.free(inst),
-    fixed :: Dict = Read.fixed(avail,inst);
-    exclude = []
-)
-    # TODO: Replace by proper toposorts
-    instlist = [k for (k,v) in inst]
-    _fixup(instlist, avail, inst, free, fixed; exclude=exclude)
-end
-
-fixup() = Dir.cd(_fixup)
-fixup(pkg) = Dir.cd(()->_fixup(pkg))
+fixup() = cd(Entry.fixup)
+fixup(pkg::String) = cd(Entry.fixup,pkg)
 
 end # module
