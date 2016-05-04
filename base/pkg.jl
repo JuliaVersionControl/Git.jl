@@ -371,7 +371,7 @@ function write_tag_metadata(pkg::String, ver::VersionNumber, commit::String)
 end
 
 """
-    available() -> Vector{ASCIIString}
+    available() -> Vector{String}
 
 Returns the names of available packages.
 """
@@ -385,7 +385,7 @@ Returns the version numbers available for package `pkg`.
 available(pkg::AbstractString) = cd(Entry.available,pkg)
 
 """
-    installed() -> Dict{ASCIIString,VersionNumber}
+    installed() -> Dict{String,VersionNumber}
 
 Returns a dictionary mapping installed package names to the installed version number of each
 package.
