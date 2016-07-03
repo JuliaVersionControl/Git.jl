@@ -63,9 +63,9 @@ function iscommit(sha1s::Vector; dir="")
 end
 
 immutable State
-    head::String
-    index::String
-    work::String
+    head::AbstractString
+    index::AbstractString
+    work::AbstractString
 end
 
 function snapshot(; dir="")
