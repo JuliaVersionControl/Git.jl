@@ -4,6 +4,7 @@ module Git
 #
 # some utility functions for working with git repos
 #
+using Compat
 import Base: shell_escape
 
 function dir(d)
@@ -63,9 +64,9 @@ function iscommit(sha1s::Vector; dir="")
 end
 
 immutable State
-    head::String
-    index::String
-    work::String
+    head::Compat.UTF8String
+    index::Compat.UTF8String
+    work::Compat.UTF8String
 end
 
 function snapshot(; dir="")

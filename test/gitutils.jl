@@ -1,4 +1,6 @@
-# This file is a part of Julia. License is MIT: http://julialang.org/license
+# This file was a part of Julia. License is MIT: http://julialang.org/license
+
+import Compat: readstring
 
 function write_and_readchomp(data, cmd::Cmd)
     r, w, p = readandwrite(cmd)
@@ -37,7 +39,7 @@ function verify_tree(d::Dict, tree::AbstractString)
         data = d[name]
         if isa(data, AbstractString)
             @test kind == "blob"
-            @test data == readall(`git cat-file blob $sha1`)
+            @test data == readstring(`git cat-file blob $sha1`)
         elseif isa(data, Dict)
             @test kind == "tree"
             verify_tree(data, sha1)
@@ -62,7 +64,7 @@ function verify_work(d::Dict)
         @test ispath(name)
         if isa(data, AbstractString)
             @test isfile(name)
-            @test readall(name) == data
+            @test readstring(name) == data
         elseif isa(data, Dict)
             cd(name) do
                 verify_work(data)

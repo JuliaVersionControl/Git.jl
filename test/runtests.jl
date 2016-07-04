@@ -1,6 +1,8 @@
-# This file is a part of Julia. License is MIT: http://julialang.org/license
+# This file was a part of Julia. License is MIT: http://julialang.org/license
 
-import Base.Git
+using Git
+using Base.Test
+
 include("gitutils.jl")
 
 @test Git.version() >= v"1.7.3"
@@ -10,7 +12,6 @@ dir = string("tmp.",randstring())
 mkdir(dir)
 @test isdir(dir)
 try cd(dir) do
-
     run(`git init -q`)
     run(`git config user.name "Julia Tester"`)
     run(`git config user.email test@julialang.org`)
@@ -35,5 +36,7 @@ try cd(dir) do
         is(x,nothing) || rethrow()
     end
     git_verify(states[1:3]...)
-
-end finally rm(dir, recursive=true) end
+end
+finally
+    rm(dir, recursive=true)
+end
