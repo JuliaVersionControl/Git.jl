@@ -10,6 +10,9 @@ branches:
     - master
     - /release-.*/
 
+skip_commits:
+  message: /\[av skip\]/
+
 notifications:
   - provider: Email
     on_build_success: false
