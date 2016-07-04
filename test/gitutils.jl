@@ -37,7 +37,7 @@ function verify_tree(d::Dict, tree::AbstractString)
         data = d[name]
         if isa(data, AbstractString)
             @test kind == "blob"
-            @test data == readall(`git cat-file blob $sha1`)
+            @test data == readstring(`git cat-file blob $sha1`)
         elseif isa(data, Dict)
             @test kind == "tree"
             verify_tree(data, sha1)
@@ -62,7 +62,7 @@ function verify_work(d::Dict)
         @test ispath(name)
         if isa(data, AbstractString)
             @test isfile(name)
-            @test readall(name) == data
+            @test readstring(name) == data
         elseif isa(data, Dict)
             cd(name) do
                 verify_work(data)
