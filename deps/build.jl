@@ -64,7 +64,7 @@ else
     try
         # this is in a try because some environments like centos 7
         # docker containers don't have `which` installed by default
-        gitpath = readchomp(is_windows() ? `where git` : `which git`)
+        gitpath = chomp(readlines(is_windows() ? `where git` : `which git`)[1])
         gitcmd = `$gitpath`
     end
     info("Using $gitver found on path" * (gitcmd == `git` ?
