@@ -26,7 +26,7 @@ try cd(dir) do
 
     contents = [nothing, "foo", "bar", Dict{Any,Any}("baz"=>"qux")]
     b = length(contents)
-    states = [ [ base(b,k,6) => contents[rem(div(k,b^p),b)+1] for k=0:(b^3)^2-1 ] for p=0:5 ]
+    states = [Dict([(base(b,k,6), contents[rem(div(k,b^p),b)+1]) for k=0:(b^3)^2-1]) for p=0:5]
 
     git_setup(states[1:3]...)
     try Git.transact() do
