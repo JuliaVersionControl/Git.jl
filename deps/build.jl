@@ -1,4 +1,5 @@
 using Compat
+import BinDeps: download_cmd, unpack_cmd, splittarpath
 if is_apple()
     using Homebrew
 end
@@ -14,7 +15,6 @@ if gitver == "notfound"
         # depend on Homebrew.jl on mac and it needs a working git to function
         error("Working git not found on path, try running\nPkg.build(\"Homebrew\")")
     end
-    import BinDeps: download_cmd, unpack_cmd, splittarpath
     baseurl = ""
     filename = ""
     if is_linux() && Sys.ARCH === :x86_64
