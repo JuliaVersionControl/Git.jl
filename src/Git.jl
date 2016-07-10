@@ -6,19 +6,25 @@ module Git
 #
 using Compat
 import Base: shell_escape
+export gitcmd # determined by deps/build.jl and saved in deps/deps.jl
+
+depsjl = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
+isfile(depsjl) ? include(depsjl) : error("Git.jl not properly installed. " *
+    "Please run\nPkg.build(\"Git\")")
 
 function dir(d)
     g = joinpath(d,".git")
     isdir(g) && return g
-    normpath(d, Base.readchomp(setenv(`git rev-parse --git-dir`, dir=d)))
+    normpath(d, Base.readchomp(setenv(`$gitcmd rev-parse --git-dir`, dir=d)))
 end
 
+git() = gitcmd
 function git(d)
-    isempty(d) && return `git`
+    isempty(d) && return gitcmd
     work_tree = abspath(d)
     git_dir = joinpath(work_tree, dir(work_tree))
     normpath(work_tree, ".") == normpath(git_dir, ".") ? # is it a bare repo?
-    `git --git-dir=$work_tree` : `git --work-tree=$work_tree --git-dir=$git_dir`
+    `$gitcmd --git-dir=$work_tree` : `$gitcmd --work-tree=$work_tree --git-dir=$git_dir`
 end
 
 cmd(args::Cmd; dir="") = `$(git(dir)) $args`

@@ -12,10 +12,10 @@ dir = string("tmp.",randstring())
 mkdir(dir)
 @test isdir(dir)
 try cd(dir) do
-    run(`git init -q`)
-    run(`git config user.name "Julia Tester"`)
-    run(`git config user.email test@julialang.org`)
-    run(`git commit -q --allow-empty -m "initial empty commit"`)
+    run(`$gitcmd init -q`)
+    run(`$gitcmd config user.name "Julia Tester"`)
+    run(`$gitcmd config user.email test@julialang.org`)
+    run(`$gitcmd commit -q --allow-empty -m "initial empty commit"`)
     git_verify(Dict(), Dict(), Dict())
 
     # each path can have one of these content in each of head, index, work
