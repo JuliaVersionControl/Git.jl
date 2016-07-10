@@ -5,3 +5,5 @@
 [![Coveralls](https://coveralls.io/repos/github/JuliaPackaging/Git.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaPackaging/Git.jl?branch=master)
 
 Julia wrapper for command line Git
+
+[![Git Badge](http://forthebadge.com/images/badges/uses-git.svg)](http://forthebadge.com)
