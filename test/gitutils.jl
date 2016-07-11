@@ -74,7 +74,7 @@ function verify_work(d::Dict)
         end
     end
     # check for anything that's not in d
-    for line in eachline(`ls -A`)
+    for line in readdir()
         name = chomp(line)
         @test name == ".git" || haskey(d,name)
     end
@@ -93,7 +93,7 @@ function git_setup(h::Dict, i::Dict, w::Dict, parents::AbstractString...)
     work  = mktree(w)
 
     # clear the repo
-    for line in eachline(`ls -A`)
+    for line in readdir()
         name = chomp(line)
         name == ".git" || rm(name, recursive=true)
     end
