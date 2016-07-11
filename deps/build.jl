@@ -20,12 +20,12 @@ if gitver == "notfound"
     if is_linux() && Sys.ARCH === :x86_64
         # use conda for a non-root option
         gitver = "2.8.2"
-        baseurl = "https://anaconda.org/conda-forge/git/$gitver/download/linux-64/"
+        baseurl = "http://anaconda.org/conda-forge/git/$gitver/download/linux-64/"
         filename = "git-$gitver-2.tar.bz2"
     elseif is_linux() && (Sys.ARCH in (:i686, :i586, :i486, :i386))
         # conda-forge doesn't build for 32 bit linux
         gitver = "2.6.4"
-        baseurl = "https://anaconda.org/anaconda/git/$gitver/download/linux-32/"
+        baseurl = "http://anaconda.org/anaconda/git/$gitver/download/linux-32/"
         filename = "git-$gitver-0.tar.bz2"
     elseif is_windows()
         # download and extract portablegit
@@ -58,8 +58,8 @@ if gitver == "notfound"
         # by setting an environment variable in deps.jl
     catch err
         error("Could not automatically install git, error was: $err\n" *
-            (isempty(downloadurl) ? "Try installing git via your system " *
-            "package manager then running\nPkg.build(\"Git\")" : ""))
+            (is_windows() ? "" : "Try installing git via your " *
+            "system package manager then running\nPkg.build(\"Git\")"))
     end
 else
     try
