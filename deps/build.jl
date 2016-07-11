@@ -48,6 +48,7 @@ if gitver == "notfound"
         # TODO: checksum validation
         (b, ext, sec_ext) = splittarpath(filename)
         run(unpack_cmd(filename, dest, is_windows() ? ".7z" : ext, sec_ext))
+        # TODO: make this less noisy on windows, see how WinRPM does it
         gitcmd = `$(joinpath(dirname(@__FILE__), dest, "bin", "git"))`
     end
     try
