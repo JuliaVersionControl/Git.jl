@@ -14,7 +14,7 @@ function mktree(d::Dict)
     lstree = ""
     for (name, data) in d
         if isa(data, AbstractString)
-            sha1 = write_and_readchomp(data, `git hash-object -w --stdin`)
+            sha1 = write_and_readchomp(data, `$gitcmd hash-object -w --stdin`)
             lstree *= "100644 blob $sha1\t$name\n"
         elseif isa(data, Dict)
             sha1 = mktree(data)
@@ -25,13 +25,13 @@ function mktree(d::Dict)
             error("mktree: don't know what to do with $name => $data")
         end
     end
-    write_and_readchomp(lstree, `git mktree`)
+    write_and_readchomp(lstree, `$gitcmd mktree`)
 end
 
 function verify_tree(d::Dict, tree::AbstractString)
     # check that tree matches d
     seen = Set()
-    for line in eachline(`git ls-tree $tree`)
+    for line in eachline(`$gitcmd ls-tree $tree`)
         m = match(r"^(\d{6}) (\w+) ([0-9a-f]{40})\t(.*)$", line)
         @test m != nothing
         perm, kind, sha1, name = m.captures
@@ -39,7 +39,7 @@ function verify_tree(d::Dict, tree::AbstractString)
         data = d[name]
         if isa(data, AbstractString)
             @test kind == "blob"
-            @test data == readstring(`git cat-file blob $sha1`)
+            @test data == readstring(`$gitcmd cat-file blob $sha1`)
         elseif isa(data, Dict)
             @test kind == "tree"
             verify_tree(data, sha1)
@@ -74,7 +74,7 @@ function verify_work(d::Dict)
         end
     end
     # check for anything that's not in d
-    for line in eachline(`ls -A`)
+    for line in readdir()
         name = chomp(line)
         @test name == ".git" || haskey(d,name)
     end
@@ -82,7 +82,7 @@ end
 
 function git_verify(h::Dict, i::Dict, w::Dict)
     verify_tree(h, "HEAD")
-    verify_tree(i, readchomp(`git write-tree`))
+    verify_tree(i, readchomp(`$gitcmd write-tree`))
     verify_work(w)
 end
 
@@ -93,24 +93,24 @@ function git_setup(h::Dict, i::Dict, w::Dict, parents::AbstractString...)
     work  = mktree(w)
 
     # clear the repo
-    for line in eachline(`ls -A`)
+    for line in readdir()
         name = chomp(line)
         name == ".git" || rm(name, recursive=true)
     end
 
     # create the head commit
-    commit_tree = `git commit-tree $headt`
+    commit_tree = `$gitcmd commit-tree $headt`
     for parent in parents
         commit_tree = `$commit_tree -p $parent`
     end
     head = write_and_readchomp(headt, commit_tree)
-    run(`git reset -q --soft $head`)
+    run(`$gitcmd reset -q --soft $head`)
 
-    run(`git read-tree $work`)      # read work into the index
-    run(`git checkout-index -fa`)   # check the index out
-    run(`git read-tree $index`)     # setup the index
+    run(`$gitcmd read-tree $work`)      # read work into the index
+    run(`$gitcmd checkout-index -fa`)   # check the index out
+    run(`$gitcmd read-tree $index`)     # setup the index
 
     # verify that everything is as expected
     git_verify(h, i, w)
 end
-git_setup(h::Dict, i::Dict, w::Dict) = git_setup(h, i, w, readchomp(`git rev-parse HEAD`))
+git_setup(h::Dict, i::Dict, w::Dict) = git_setup(h, i, w, readchomp(`$gitcmd rev-parse HEAD`))

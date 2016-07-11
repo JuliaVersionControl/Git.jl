@@ -12,10 +12,10 @@ dir = string("tmp.",randstring())
 mkdir(dir)
 @test isdir(dir)
 try cd(dir) do
-    run(`git init -q`)
-    run(`git config user.name "Julia Tester"`)
-    run(`git config user.email test@julialang.org`)
-    run(`git commit -q --allow-empty -m "initial empty commit"`)
+    run(`$gitcmd init -q`)
+    run(`$gitcmd config user.name "Julia Tester"`)
+    run(`$gitcmd config user.email test@julialang.org`)
+    run(`$gitcmd commit -q --allow-empty -m "initial empty commit"`)
     git_verify(Dict(), Dict(), Dict())
 
     # each path can have one of these content in each of head, index, work
@@ -26,7 +26,7 @@ try cd(dir) do
 
     contents = [nothing, "foo", "bar", Dict{Any,Any}("baz"=>"qux")]
     b = length(contents)
-    states = [ [ base(b,k,6) => contents[rem(div(k,b^p),b)+1] for k=0:(b^3)^2-1 ] for p=0:5 ]
+    states = [Dict([(base(b,k,6), contents[rem(div(k,b^p),b)+1]) for k=0:(b^3)^2-1]) for p=0:5]
 
     git_setup(states[1:3]...)
     try Git.transact() do
