@@ -28,7 +28,7 @@ end
     Git.git([d])
 
 Return a Git command that refers to the work tree and directory given by `d`, or the
-current work tree and directory of `d` is not specified.
+current work tree and directory if `d` is not specified.
 """
 git() = gitcmd
 function git(d)
