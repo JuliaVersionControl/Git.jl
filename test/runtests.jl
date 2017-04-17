@@ -33,7 +33,7 @@ try cd(dir) do
         git_setup(states[4:6]...)
         throw(nothing)
     end catch x
-        is(x,nothing) || rethrow()
+        x === nothing || rethrow()
     end
     git_verify(states[1:3]...)
 end
