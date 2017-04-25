@@ -19,7 +19,7 @@ function mktree(d::Dict)
         elseif isa(data, Dict)
             sha1 = mktree(data)
             lstree *= "040000 tree $sha1\t$name\n"
-        elseif is(data, nothing)
+        elseif data === nothing
             # ignore it
         else
             error("mktree: don't know what to do with $name => $data")
@@ -50,14 +50,14 @@ function verify_tree(d::Dict, tree::AbstractString)
     end
     # check that nothing was missing from tree
     for (name, data) in d
-        @test is(data,nothing) || in(name,seen)
+        @test data === nothing || in(name,seen)
     end
 end
 
 function verify_work(d::Dict)
     # check what's in d
     for (name, data) in d
-        if is(data, nothing)
+        if data === nothing
             @test !ispath(name)
             continue
         end
