@@ -173,9 +173,9 @@ head(; dir="") = readchomp(`rev-parse HEAD`, dir=dir)
 
 
 immutable State
-    head::Compat.UTF8String
-    index::Compat.UTF8String
-    work::Compat.UTF8String
+    head::String
+    index::String
+    work::String
 end
 
 """
