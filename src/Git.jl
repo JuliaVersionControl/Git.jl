@@ -5,7 +5,7 @@ module Git
 # some utility functions for working with git repos
 #
 using Compat
-import Base: shell_escape
+using Base: shell_escape
 export gitcmd # determined by deps/build.jl and saved in deps/deps.jl
 
 depsjl = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
@@ -172,7 +172,7 @@ Return the commit to which HEAD currently refers.
 head(; dir="") = readchomp(`rev-parse HEAD`, dir=dir)
 
 
-immutable State
+struct State
     head::String
     index::String
     work::String

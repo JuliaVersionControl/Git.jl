@@ -1,7 +1,8 @@
 # This file was a part of Julia. License is MIT: http://julialang.org/license
 
 using Git
-using Base.Test
+using Compat
+using Compat.Test
 
 include("gitutils.jl")
 
