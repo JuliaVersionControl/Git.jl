@@ -172,7 +172,7 @@ Return the commit to which HEAD currently refers.
 head(; dir="") = readchomp(`rev-parse HEAD`, dir=dir)
 
 
-immutable State
+struct State
     head::String
     index::String
     work::String

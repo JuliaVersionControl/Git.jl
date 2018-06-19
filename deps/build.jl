@@ -25,6 +25,7 @@ gitcmd = `git`
 gitver = "notfound"
 try
     gitver = readchomp(`$gitcmd --version`)
+catch
 end
 if gitver == "notfound"
     if is_apple()
@@ -74,6 +75,7 @@ else
         # docker containers don't have `which` installed by default
         gitpath = chomp(readlines(is_windows() ? `where git` : `which git`)[1])
         gitcmd = `$gitpath`
+    catch
     end
     info("Using $gitver found on path" * (gitcmd == `git` ?
         "" : " at $gitcmd"))
