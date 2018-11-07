@@ -1,24 +1,12 @@
 # This file was a part of Julia. License is MIT: http://julialang.org/license
 
-using Compat
-
-if VERSION >= v"0.7.0-DEV.3427"
-    function write_and_readchomp(data, cmd::Cmd)
-        p = open(cmd, "r+")
-        print(p.in, data)
-        close(p.in)
-        v = readchomp(p.out)
-        wait(p)
-        return v
-    end
-else
-    function write_and_readchomp(data, cmd::Cmd)
-        r, w, p = readandwrite(cmd)
-        print(w,data); close(w)
-        v = readchomp(r)
-        wait(p)
-        return v
-    end
+function write_and_readchomp(data, cmd::Cmd)
+    p = open(cmd, "r+")
+    print(p.in, data)
+    close(p.in)
+    v = readchomp(p.out)
+    wait(p)
+    return v
 end
 
 function mktree(d::Dict)

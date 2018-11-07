@@ -1,7 +1,4 @@
-using Compat
-using Compat: @info
-using Compat.Sys: isapple, islinux, iswindows
-
+using Base.Sys: isapple, islinux, iswindows
 using BinDeps
 using BinDeps: download_cmd, unpack_cmd, splittarpath
 

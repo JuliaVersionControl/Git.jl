@@ -4,7 +4,6 @@ module Git
 #
 # some utility functions for working with git repos
 #
-using Compat
 using Base: shell_escape
 using VersionParsing
 export gitcmd # determined by deps/build.jl and saved in deps/deps.jl
