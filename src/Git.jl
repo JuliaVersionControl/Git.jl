@@ -6,6 +6,7 @@ module Git
 #
 using Compat
 using Base: shell_escape
+using VersionParsing
 export gitcmd # determined by deps/build.jl and saved in deps/deps.jl
 
 depsjl = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
@@ -88,15 +89,7 @@ end
 
 Return the version of Git being used by the package.
 """
-function version()
-    vs = split(readchomp(`version`), ' ')[3]
-    ns = split(vs, '.')
-    if length(ns) > 3
-        VersionNumber(join(ns[1:3], '.'))
-    else
-        VersionNumber(join(ns, '.'))
-    end
-end
+version() = vparse(readchomp(`version`))
 
 """
     Git.modules(args; dir="")
