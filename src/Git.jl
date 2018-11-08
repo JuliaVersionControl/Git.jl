@@ -4,8 +4,8 @@ module Git
 #
 # some utility functions for working with git repos
 #
-using Compat
-import Base: shell_escape
+using Base: shell_escape
+using VersionParsing
 export gitcmd # determined by deps/build.jl and saved in deps/deps.jl
 
 depsjl = joinpath(dirname(@__FILE__), "..", "deps", "deps.jl")
@@ -47,12 +47,12 @@ Return a Git command from the given arguments, acting on the repository given in
 cmd(args::Cmd; dir="") = `$(git(dir)) $args`
 
 """
-    Git.run(args; dir="", out=STDOUT)
+    Git.run(args; dir="", out=stdout)
 
 Execute the Git command from the given arguments `args` on the repository `dir`, writing
 the results to the output stream `out`.
 """
-run(args::Cmd; dir="", out=STDOUT) = Base.run(pipeline(cmd(args,dir=dir), out))
+run(args::Cmd; dir="", out=stdout) = Base.run(pipeline(cmd(args,dir=dir), out))
 
 """
     Git.readstring(args; dir="")
@@ -60,7 +60,7 @@ run(args::Cmd; dir="", out=STDOUT) = Base.run(pipeline(cmd(args,dir=dir), out))
 Read the result of the Git command using the given arguments on the given repository
 as a string.
 """
-readstring(args::Cmd; dir="") = Base.readstring(cmd(args,dir=dir))
+readstring(args::Cmd; dir="") = read(cmd(args,dir=dir), String)
 
 """
     Git.readchomp(args; dir="")
@@ -88,15 +88,7 @@ end
 
 Return the version of Git being used by the package.
 """
-function version()
-    vs = split(readchomp(`version`), ' ')[3]
-    ns = split(vs, '.')
-    if length(ns) > 3
-        VersionNumber(join(ns[1:3], '.'))
-    else
-        VersionNumber(join(ns, '.'))
-    end
-end
+version() = vparse(readchomp(`version`))
 
 """
     Git.modules(args; dir="")
@@ -147,7 +139,7 @@ single SHA1 or a vector of SHA1s.
 """
 iscommit(name; dir="") = success(`cat-file commit $name`, dir=dir)
 function iscommit(sha1s::Vector; dir="")
-    indexin(sha1s,split(readchomp(`log --all --format=%H`, dir=dir),"\n")).!=0
+    indexin(sha1s,split(readchomp(`log --all --format=%H`, dir=dir),"\n")).!=nothing
 end
 
 """
@@ -172,7 +164,7 @@ Return the commit to which HEAD currently refers.
 head(; dir="") = readchomp(`rev-parse HEAD`, dir=dir)
 
 
-immutable State
+struct State
     head::String
     index::String
     work::String

@@ -1,11 +1,10 @@
 # This file was a part of Julia. License is MIT: http://julialang.org/license
 
-import Compat: readstring
-
 function write_and_readchomp(data, cmd::Cmd)
-    r, w, p = readandwrite(cmd)
-    print(w,data); close(w)
-    v = readchomp(r)
+    p = open(cmd, "r+")
+    print(p.in, data)
+    close(p.in)
+    v = readchomp(p.out)
     wait(p)
     return v
 end
@@ -39,7 +38,7 @@ function verify_tree(d::Dict, tree::AbstractString)
         data = d[name]
         if isa(data, AbstractString)
             @test kind == "blob"
-            @test data == readstring(`$gitcmd cat-file blob $sha1`)
+            @test data == read(`$gitcmd cat-file blob $sha1`, String)
         elseif isa(data, Dict)
             @test kind == "tree"
             verify_tree(data, sha1)
@@ -64,7 +63,7 @@ function verify_work(d::Dict)
         @test ispath(name)
         if isa(data, AbstractString)
             @test isfile(name)
-            @test readstring(name) == data
+            @test read(name, String) == data
         elseif isa(data, Dict)
             cd(name) do
                 verify_work(data)
