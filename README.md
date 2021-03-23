@@ -1,17 +1,27 @@
-# Git.jl
+# Git
 
-[![Travis](https://travis-ci.org/JuliaPackaging/Git.jl.svg?branch=master)](https://travis-ci.org/JuliaPackaging/Git.jl)
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/qw0kq3e4d6hua3q2/branch/master?svg=true)](https://ci.appveyor.com/project/ararslan/git-jl/branch/master)
-[![Coveralls](https://coveralls.io/repos/github/JuliaPackaging/Git.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaPackaging/Git.jl?branch=master)
+[![CI](https://github.com/JuliaVersionControl/Git.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaVersionControl/Git.jl/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/JuliaVersionControl/Git.jl/branch/master/graph/badge.svg?token=cdXpiH0OJ3)](https://codecov.io/gh/JuliaVersionControl/Git.jl)
 
-Julia wrapper for command line Git
+Git allows you to use command-line Git in your Julia packages. You do
+not need to have Git installed on your computer, and neither do the users of
+your packages!
 
-This package provides Julia wrappers for some common Git operations,
-as used by the Julia package manager in versions 0.4 and earlier.
+Git provides a Git binary via
+[Git_jll](https://github.com/JuliaBinaryWrappers/Git_jll.jl).
+The latest version of Git requires at least Julia 1.6.
 
-If you do not already have `git` installed and on your system `PATH`, then
-adding this package (or running `Pkg.build("Git")` will download a local binary
-copy of command-line git if you are using Windows, Mac OS X via
-[Homebrew.jl](https://github.com/JuliaLang/Homebrew.jl), or Linux on x86/amd64 architectures.
+Git is intended to work on any platform that supports Julia,
+including (but not limited to) Windows, macOS, Linux, and FreeBSD.
 
-[![Git Badge](http://forthebadge.com/images/badges/uses-git.svg)](http://forthebadge.com)
+## Examples
+
+```julia
+julia> using Git
+
+julia> run(`$(git()) clone https://github.com/JuliaRegistries/General`)
+```
+
+## Acknowledgements
+
+- This work was supported in part by National Institutes of Health grants U54GM115677, R01LM011963, and R25MH116440. The content is solely the responsibility of the authors and does not necessarily represent the official views of the National Institutes of Health.

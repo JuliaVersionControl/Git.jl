@@ -1,6 +1,6 @@
-*.jl.cov
 *.jl.*.cov
+*.jl.cov
 *.jl.mem
-deps/downloads/
-deps/usr/
-deps/deps.jl
+.DS_Store
+Manifest.toml
+/dev/

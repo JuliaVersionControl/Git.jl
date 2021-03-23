@@ -1,37 +1,58 @@
-# This file was a part of Julia. License is MIT: http://julialang.org/license
-
 using Git
 using Test
 
-include("gitutils.jl")
+import JLLWrappers
 
-@test Git.version() >= v"1.7.3"
+get_env(name) = get(ENV, name, nothing)
+const orig_libpath     = deepcopy(get_env(JLLWrappers.LIBPATH_env))
+const orig_execpath    = deepcopy(get_env("GIT_EXEC_PATH"))
+const orig_cainfo      = deepcopy(get_env("GIT_SSL_CAINFO"))
+const orig_templatedir = deepcopy(get_env("GIT_TEMPLATE_DIR"))
 
-mktempdir() do dir
-    cd(dir) do
-        run(`$gitcmd init -q`)
-        run(`$gitcmd config user.name "Julia Tester"`)
-        run(`$gitcmd config user.email test@julialang.org`)
-        run(`$gitcmd commit -q --allow-empty -m "initial empty commit"`)
-        git_verify(Dict(), Dict(), Dict())
-
-        # each path can have one of these content in each of head, index, work
-        # for a total of length(contents)^3 = 4^3 = 64 combinations.
-        # each path can be in any of these 64 "superpositions" before & after
-        # for a total of 64^2 = 4096 files needed to test all transitions
-        # between before and after superpositions of git repo states.
-
-        contents = [nothing, "foo", "bar", Dict{Any,Any}("baz"=>"qux")]
-        b = length(contents)
-        states = [Dict([(string(k, base=b, pad=6), contents[rem(div(k,b^p),b)+1]) for k=0:(b^3)^2-1]) for p=0:5]
-
-        git_setup(states[1:3]...)
-        try Git.transact() do
-            git_setup(states[4:6]...)
-            throw(nothing)
-        end catch x
-            x === nothing || rethrow()
+function withtempdir(f::Function)
+    mktempdir() do tmp_dir
+        cd(tmp_dir) do
+            f(tmp_dir)
         end
-        git_verify(states[1:3]...)
     end
+    return nothing
+end
+
+@testset "Git.jl" begin
+    withtempdir() do tmp_dir
+        @test !isdir("Git.jl")
+        @test !isfile(joinpath("Git.jl", "Project.toml"))
+        run(`$(git()) clone https://github.com/JuliaVersionControl/Git.jl`)
+        @test isdir("Git.jl")
+        @test isfile(joinpath("Git.jl", "Project.toml"))
+    end
+
+    withtempdir() do tmp_dir
+        @test !isdir("Git.jl")
+        @test !isfile(joinpath("Git.jl", "Project.toml"))
+        run(`$(git()) clone https://github.com/JuliaVersionControl/Git.jl`)
+        @test isdir("Git.jl")
+        @test isfile(joinpath("Git.jl", "Project.toml"))
+    end
+
+    withtempdir() do tmp_dir
+        @test !isdir("Git.jl")
+        @test !isfile(joinpath("Git.jl", "Project.toml"))
+        cmd = Git.git`clone https://github.com/JuliaVersionControl/Git.jl`
+        @test cmd isa Cmd
+        @test !isdir("Git.jl")
+        @test !isfile(joinpath("Git.jl", "Project.toml"))
+        run(cmd)
+        @test isdir("Git.jl")
+        @test isfile(joinpath("Git.jl", "Project.toml"))
+    end
+
+end
+
+@testset "Safety" begin
+    # Make sure `git` commands don't leak environment variables
+    @test orig_libpath == get_env(JLLWrappers.LIBPATH_env)
+    @test orig_execpath == get_env("GIT_EXEC_PATH")
+    @test orig_cainfo == get_env("GIT_SSL_CAINFO")
+    @test orig_templatedir == get_env("GIT_TEMPLATE_DIR")
 end
