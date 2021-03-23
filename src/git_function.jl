@@ -6,7 +6,7 @@ Return a `Cmd` for running Git.
 ## Example
 
 ```julia
-julia> run(`$(git())` clone https://github.com/JuliaVersionControl/GitCommand.jl)
+julia> run(`$(git()) clone https://github.com/JuliaRegistries/General`)
 ```
 """
 function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
