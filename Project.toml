@@ -1,16 +1,19 @@
 name = "Git"
 uuid = "d7ba0133-e1db-5d97-8f8c-041e4b3a1eb2"
+authors = ["Dilum Aluthge", "contributors"]
+version = "1.0.0-DEV"
 
 [deps]
-BinDeps = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
-Homebrew = "d9be37ee-ecc9-5288-90f1-b9ca67657a75"
-VersionParsing = "81def892-9a0e-5fdd-b105-ffc91e053289"
+Git_jll = "f8c6e375-362e-5223-8a59-34ff63f689eb"
 
 [compat]
-julia = "≥ 0.7.0"
+Git_jll = "2.31"
+JLLWrappers = "1.1"
+julia = "1.6"
 
 [extras]
+JLLWrappers = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["JLLWrappers", "Test"]
