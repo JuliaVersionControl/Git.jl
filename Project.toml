@@ -1,7 +1,7 @@
 name = "Git"
 uuid = "d7ba0133-e1db-5d97-8f8c-041e4b3a1eb2"
 authors = ["Dilum Aluthge", "contributors"]
-version = "1.0.0-DEV"
+version = "1.0.0"
 
 [deps]
 Git_jll = "f8c6e375-362e-5223-8a59-34ff63f689eb"
