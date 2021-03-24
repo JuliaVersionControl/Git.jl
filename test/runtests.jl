@@ -22,7 +22,7 @@ end
     withtempdir() do tmp_dir
         @test !isdir("Git.jl")
         @test !isfile(joinpath("Git.jl", "Project.toml"))
-        run(`$(git()) clone https://github.com/JuliaVersionControl/Git.jl`)
+        run(`$git clone https://github.com/JuliaVersionControl/Git.jl`)
         @test isdir("Git.jl")
         @test isfile(joinpath("Git.jl", "Project.toml"))
     end
@@ -30,7 +30,7 @@ end
     withtempdir() do tmp_dir
         @test !isdir("Git.jl")
         @test !isfile(joinpath("Git.jl", "Project.toml"))
-        run(`$(git()) clone https://github.com/JuliaVersionControl/Git.jl`)
+        run(`$git clone https://github.com/JuliaVersionControl/Git.jl`)
         @test isdir("Git.jl")
         @test isfile(joinpath("Git.jl", "Project.toml"))
     end

@@ -1,15 +1,15 @@
 """
-    git()
+    _git()
 
 Return a `Cmd` for running Git.
 
 ## Example
 
 ```julia
-julia> run(`$(git()) clone https://github.com/JuliaRegistries/General`)
+julia> run(`$(_git()) clone https://github.com/JuliaRegistries/General`)
 ```
 """
-function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
+function _git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
     @static if Sys.iswindows()
         return Git_jll.git(; adjust_PATH, adjust_LIBPATH)::Cmd
     else
@@ -30,6 +30,6 @@ function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
         env_mapping["GIT_TEMPLATE_DIR"] = share_git_core_templates
 
         original_cmd = Git_jll.git(; adjust_PATH, adjust_LIBPATH)::Cmd
-        return addenv(original_cmd, env_mapping...)::Cmd
+        return addenv(original_cmd, env_mapping...; inherit=false)::Cmd
     end
 end
