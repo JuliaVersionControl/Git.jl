@@ -19,13 +19,13 @@ including (but not limited to) Windows, macOS, Linux, and FreeBSD.
 ```julia
 julia> using Git
 
-julia> run(`$(git()) clone https://github.com/JuliaRegistries/General`)
+julia> run(`$git clone https://github.com/JuliaRegistries/General`)
 ```
 
 This can equivalently be written with explicitly split arguments as
 
 ```
-julia> run(git(["clone", "https://github.com/JuliaRegistries/General"]))
+julia> run(_git(["clone", "https://github.com/JuliaRegistries/General"]))
 ```
 
 to bypass the parsing of the command string.
@@ -35,14 +35,14 @@ To read a single line of output from a git command you can use `readchomp`,
 ```
 julia> cd("General")
 
-julia> readchomp(`$(git()) remote get-url origin`)
+julia> readchomp(`$git remote get-url origin`)
 "https://github.com/JuliaRegistries/General"
 ```
 
 and `readlines` for multiple lines.
 
 ```
-julia> readlines(`$(git()) log`)
+julia> readlines(`$git log`)
 ```
 
 ## Acknowledgements

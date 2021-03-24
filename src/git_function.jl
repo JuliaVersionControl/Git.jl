@@ -1,4 +1,4 @@
-"""
+raw"""
     _git()
 
 Return a `Cmd` for running Git.
@@ -12,7 +12,7 @@ julia> run(`$git clone https://github.com/JuliaRegistries/General`)
 This can equivalently be written with explicitly split arguments as
 
 ```
-julia> run(git(["clone", "https://github.com/JuliaRegistries/General"]))
+julia> run(_git(["clone", "https://github.com/JuliaRegistries/General"]))
 ```
 
 to bypass the parsing of the command string.
@@ -42,8 +42,8 @@ function _git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
     end
 end
 
-function git(args::AbstractVector{<:AbstractString}; kwargs...)
-    cmd = git(; kwargs...)
+function _git(args::AbstractVector{<:AbstractString}; kwargs...)
+    cmd = _git(; kwargs...)
     append!(cmd.exec, args)
     return cmd
 end

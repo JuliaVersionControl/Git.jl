@@ -17,6 +17,6 @@ An object that when interpolated into `Cmd` objects returns `_git()`.
 """
 const git = CmdFn(_git)
 
-export git
+export git, _git
 
 end # module
