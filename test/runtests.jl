@@ -34,19 +34,6 @@ end
         @test isdir("Git.jl")
         @test isfile(joinpath("Git.jl", "Project.toml"))
     end
-
-    withtempdir() do tmp_dir
-        @test !isdir("Git.jl")
-        @test !isfile(joinpath("Git.jl", "Project.toml"))
-        cmd = Git.git`clone https://github.com/JuliaVersionControl/Git.jl`
-        @test cmd isa Cmd
-        @test !isdir("Git.jl")
-        @test !isfile(joinpath("Git.jl", "Project.toml"))
-        run(cmd)
-        @test isdir("Git.jl")
-        @test isfile(joinpath("Git.jl", "Project.toml"))
-    end
-
 end
 
 @testset "Safety" begin
