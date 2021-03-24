@@ -22,6 +22,29 @@ julia> using Git
 julia> run(`$(git()) clone https://github.com/JuliaRegistries/General`)
 ```
 
+This can equivalently be written with explicitly split arguments as
+
+```
+julia> run(git(["clone", "https://github.com/JuliaRegistries/General"]))
+```
+
+to bypass the parsing of the command string.
+
+To read a single line of output from a git command you can use `readchomp`,
+
+```
+julia> cd("General")
+
+julia> readchomp(`$(git()) remote get-url origin`)
+"https://github.com/JuliaRegistries/General"
+```
+
+and `readlines` for multiple lines.
+
+```
+julia> readlines(`$(git()) log`)
+```
+
 ## Acknowledgements
 
 - This work was supported in part by National Institutes of Health grants U54GM115677, R01LM011963, and R25MH116440. The content is solely the responsibility of the authors and does not necessarily represent the official views of the National Institutes of Health.
