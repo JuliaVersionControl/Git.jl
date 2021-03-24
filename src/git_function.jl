@@ -6,8 +6,16 @@ Return a `Cmd` for running Git.
 ## Example
 
 ```julia
-julia> run(`$(_git()) clone https://github.com/JuliaRegistries/General`)
+julia> run(`$git clone https://github.com/JuliaRegistries/General`)
 ```
+
+This can equivalently be written with explicitly split arguments as
+
+```
+julia> run(git(["clone", "https://github.com/JuliaRegistries/General"]))
+```
+
+to bypass the parsing of the command string.
 """
 function _git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
     @static if Sys.iswindows()
@@ -32,4 +40,10 @@ function _git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
         original_cmd = Git_jll.git(; adjust_PATH, adjust_LIBPATH)::Cmd
         return addenv(original_cmd, env_mapping...; inherit=false)::Cmd
     end
+end
+
+function git(args::AbstractVector{<:AbstractString}; kwargs...)
+    cmd = git(; kwargs...)
+    append!(cmd.exec, args)
+    return cmd
 end
