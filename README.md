@@ -24,15 +24,27 @@ julia> run(`$(git()) clone https://github.com/JuliaRegistries/General`)
 
 This can equivalently be written with explicitly split arguments as
 
-```
+```julia
 julia> run(git(["clone", "https://github.com/JuliaRegistries/General"]))
 ```
 
-to bypass the parsing of the command string.
+to bypass the parsing of the command string. Of course, one can also do
+
+```julia
+julia> import Git
+
+julia> const git = Git.git()
+
+julia> run(`$git clone https://github.com/JuliaRegistries/General`)
+```
+
+This is thread-safe since `Cmd` objects are not stateful. However, note that the
+`git` command object won't notice any changes to environmental variables
+(like `GIT_CURL_VERBOSE` for example) since it was created.
 
 To read a single line of output from a git command you can use `readchomp`,
 
-```
+```julia
 julia> cd("General")
 
 julia> readchomp(`$(git()) remote get-url origin`)
@@ -41,7 +53,7 @@ julia> readchomp(`$(git()) remote get-url origin`)
 
 and `readlines` for multiple lines.
 
-```
+```julia
 julia> readlines(`$(git()) log`)
 ```
 
