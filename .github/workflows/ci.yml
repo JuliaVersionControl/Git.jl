@@ -15,9 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '^1.6.0-0' # delete this line once Julia 1.6 is released
-          # - '1.6'    # uncomment this line once Julia 1.6 is released
-          # - '1'      # uncomment this line once Julia 1.6 is released
+          - '1.6'
+          - '1'
           - 'nightly'
         os:
           - ubuntu-latest
