@@ -10,5 +10,6 @@ import Git_jll
 export git
 
 include("git_function.jl")
+include("utils.jl")
 
 end # module
