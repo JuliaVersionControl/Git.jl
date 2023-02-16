@@ -48,17 +48,26 @@ end
 # (<https://github.com/JuliaVersionControl/Git.jl/issues/40>) works correctly.  While SIP is
 # a macOS-specific issue, it's good to exercise this code path everywhere.
 @testset "SIP workaround" begin
-    gitd(dir, cmd) = run(`$(git()) -C $(dir) -c "user.name=a" -c "user.email=b@c" $(cmd)`)
+    gitd(dir, cmd; stdout=Base.stdout, stderr=Base.stderr) =
+        success(pipeline(`$(git()) -C $(dir) -c "user.name=a" -c "user.email=b@c" $(cmd)`;
+                         stdout, stderr))
     branch = "dev"
     mktempdir() do dir1; mktempdir() do dir2;
-        gitd(dir1, `init --bare --quiet --initial-branch $(branch)`)
-        gitd(dir2, `init --quiet --initial-branch $(branch)`)
+        @test gitd(dir1, `init --bare --quiet --initial-branch $(branch)`)
+        @test gitd(dir2, `init --quiet --initial-branch $(branch)`)
         open(joinpath(dir2, "README"); write=true) do io
             println(io, "test")
         end
-        gitd(dir2, `add --all`)
-        gitd(dir2, `commit --quiet -m test`)
-        gitd(dir2, `remote add origin file://$(dir1)`)
-        gitd(dir2, `push --quiet --set-upstream origin $(branch)`)
+        @test gitd(dir2, `add --all`)
+        @test gitd(dir2, `commit --quiet -m test`)
+        @test gitd(dir2, `remote add origin file://$(dir1)`)
+        @test gitd(dir2, `push --quiet --set-upstream origin $(branch)`)
+        dir1_io, dir2_io = IOBuffer(), IOBuffer()
+        @test gitd(dir1, `log`; stdout=dir1_io)
+        @test gitd(dir2, `log`; stdout=dir2_io)
+        # Make sure the logs are the same for the two repositories
+        dir1_log, dir2_log = String.(take!.((dir1_io, dir2_io)))
+        @test !isempty(dir1_log) === !isempty(dir2_log) === true
+        @test dir1_log == dir2_log
     end; end
 end
