@@ -37,6 +37,13 @@ function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
         env_mapping["GIT_SSL_CAINFO"]   = ssl_cert
         env_mapping["GIT_TEMPLATE_DIR"] = share_git_core_templates
 
+        @static if Sys.isapple()
+            # This is needed to work around System Integrity Protection (SIP) restrictions
+            # on macOS.  See <https://github.com/JuliaVersionControl/Git.jl/issues/40> for
+            # more details.
+            env_mapping["JLL_DYLD_FALLBACK_LIBRARY_PATH"] = Git_jll.LIBPATH[]
+        end
+
         original_cmd = Git_jll.git(; adjust_PATH, adjust_LIBPATH)::Cmd
         return addenv(original_cmd, env_mapping...)::Cmd
     end

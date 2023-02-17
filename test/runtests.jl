@@ -22,7 +22,7 @@ end
     withtempdir() do tmp_dir
         @test !isdir("Git.jl")
         @test !isfile(joinpath("Git.jl", "Project.toml"))
-        run(`$(git()) clone https://github.com/JuliaVersionControl/Git.jl`)
+        run(`$(git()) clone --quiet https://github.com/JuliaVersionControl/Git.jl`)
         @test isdir("Git.jl")
         @test isfile(joinpath("Git.jl", "Project.toml"))
     end
@@ -30,7 +30,7 @@ end
     withtempdir() do tmp_dir
         @test !isdir("Git.jl")
         @test !isfile(joinpath("Git.jl", "Project.toml"))
-        run(git(["clone", "https://github.com/JuliaVersionControl/Git.jl"]))
+        run(git(["clone", "--quiet", "https://github.com/JuliaVersionControl/Git.jl"]))
         @test isdir("Git.jl")
         @test isfile(joinpath("Git.jl", "Project.toml"))
     end
@@ -42,4 +42,32 @@ end
     @test orig_execpath == get_env("GIT_EXEC_PATH")
     @test orig_cainfo == get_env("GIT_SSL_CAINFO")
     @test orig_templatedir == get_env("GIT_TEMPLATE_DIR")
+end
+
+# This makes sure the work around for the SIP restrictions on macOS
+# (<https://github.com/JuliaVersionControl/Git.jl/issues/40>) works correctly.  While SIP is
+# a macOS-specific issue, it's good to exercise this code path everywhere.
+@testset "SIP workaround" begin
+    gitd(dir, cmd; stdout=Base.stdout, stderr=Base.stderr) =
+        success(pipeline(`$(git()) -C $(dir) -c "user.name=a" -c "user.email=b@c" $(cmd)`;
+                         stdout, stderr))
+    branch = "dev"
+    mktempdir() do dir1; mktempdir() do dir2;
+        @test gitd(dir1, `init --bare --quiet --initial-branch $(branch)`)
+        @test gitd(dir2, `init --quiet --initial-branch $(branch)`)
+        open(joinpath(dir2, "README"); write=true) do io
+            println(io, "test")
+        end
+        @test gitd(dir2, `add --all`)
+        @test gitd(dir2, `commit --quiet -m test`)
+        @test gitd(dir2, `remote add origin file://$(dir1)`)
+        @test gitd(dir2, `push --quiet --set-upstream origin $(branch)`)
+        dir1_io, dir2_io = IOBuffer(), IOBuffer()
+        @test gitd(dir1, `log`; stdout=dir1_io)
+        @test gitd(dir2, `log`; stdout=dir2_io)
+        # Make sure the logs are the same for the two repositories
+        dir1_log, dir2_log = String.(take!.((dir1_io, dir2_io)))
+        @test !isempty(dir1_log) === !isempty(dir2_log) === true
+        @test dir1_log == dir2_log
+    end; end
 end
