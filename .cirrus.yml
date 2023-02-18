@@ -6,7 +6,7 @@ task:
       env:
         JULIA_PKG_SERVER_REGISTRY_PREFERENCE: eager
         matrix:
-        - JULIA_VERSION: 1.6
+        # - JULIA_VERSION: 1.6 # Has problems with libcurl
         - JULIA_VERSION: 1
         # - JULIA_VERSION: nightly # not available
     - name: Linux ARMv8
