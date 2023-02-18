@@ -10,7 +10,6 @@ task:
     matrix:
       - JULIA_VERSION: 1.6
       - JULIA_VERSION: 1
-      - JULIA_VERSION: nightly
   allow_failures: $JULIA_VERSION == 'nightly'
   install_script: |
     URL="https://raw.githubusercontent.com/ararslan/CirrusCI.jl/master/bin/install.sh"
