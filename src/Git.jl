@@ -6,6 +6,7 @@ packages. This is implemented with the `git` function, which returns a
 module Git
 
 import Git_jll
+import NetworkOptions
 
 export git
 
