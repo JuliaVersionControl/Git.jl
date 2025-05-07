@@ -84,7 +84,7 @@ end
                 ssh_privkey = ENV["CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY"]
                 println(io, ssh_privkey)
             end # open
-            withenv("GIT_SSH_COMMAND" => "ssh -i \"$(privkey_filepath)\"") do
+            withenv("GIT_SSH_COMMAND" => "ssh -vvv -i \"$(privkey_filepath)\"") do
                 withtempdir() do workdir
                     @test !isdir("Git.jl")
                     @test !isfile(joinpath("Git.jl", "Project.toml"))
