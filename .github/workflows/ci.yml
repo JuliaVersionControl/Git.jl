@@ -63,6 +63,7 @@ jobs:
       - uses: julia-actions/julia-buildpkg@v1
       - name: On Linux only, add Github.com known hosts (from GitHub API over HTTPS)
         run: |
+          mkdir -p ~/.ssh
           curl --silent https://api.github.com/meta | jq --raw-output '"github.com "+.ssh_keys[]' >> ~/.ssh/known_hosts
         if: runner.os == 'Linux'
       - uses: julia-actions/julia-runtest@v1
