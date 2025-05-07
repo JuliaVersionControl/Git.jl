@@ -85,13 +85,11 @@ end
             end # open
             withenv("GIT_SSH_COMMAND" => "ssh -i \"$(privkey_filepath)\"") do
                 withtempdir() do workdir
-                    cd(workdir) do
-                        @test !isdir("Git.jl")
-                        @test !isfile(joinpath("Git.jl", "Project.toml"))
-                        @test success(`$(git()) clone --depth=1 git@github.com:JuliaVersionControl/Git.jl.git`)
-                        @test isdir("Git.jl")
-                        @test isfile(joinpath("Git.jl", "Project.toml"))
-                    end # cd
+                    @test !isdir("Git.jl")
+                    @test !isfile(joinpath("Git.jl", "Project.toml"))
+                    @test success(`$(git()) clone --depth=1 git@github.com:JuliaVersionControl/Git.jl.git`)
+                    @test isdir("Git.jl")
+                    @test isfile(joinpath("Git.jl", "Project.toml"))
                 end # withtempdir/workdir
             end # withenv
         end # withtempdir/sshprivkeydir
