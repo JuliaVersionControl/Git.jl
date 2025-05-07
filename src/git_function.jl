@@ -1,3 +1,6 @@
+using OpenSSH_jll: OpenSSH_jll
+using JLLWrappers: pathsep, LIBPATH_env
+
 """
     git()
 
@@ -18,8 +21,8 @@ julia> run(git(["clone", "https://github.com/JuliaRegistries/General"]))
 to bypass the parsing of the command string.
 """
 function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
-    @static if Sys.iswindows()
-        return Git_jll.git(; adjust_PATH, adjust_LIBPATH)::Cmd
+    git_cmd = @static if Sys.iswindows()
+        Git_jll.git(; adjust_PATH, adjust_LIBPATH)::Cmd
     else
         root = Git_jll.artifact_dir
 
@@ -45,8 +48,24 @@ function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
         end
 
         original_cmd = Git_jll.git(; adjust_PATH, adjust_LIBPATH)::Cmd
-        return addenv(original_cmd, env_mapping...)::Cmd
+        addenv(original_cmd, env_mapping...)::Cmd
     end
+
+    # Use OpenSSH from the JLL: <https://github.com/JuliaVersionControl/Git.jl/issues/51>.
+    if OpenSSH_jll.is_available()
+        path = split(get(ENV, "PATH", ""), pathsep)
+        libpath = split(get(ENV, LIBPATH_env, ""), pathsep)
+
+        path = vcat(dirname(OpenSSH_jll.ssh_path), path)
+        libpath = vcat(OpenSSH_jll.LIBPATH_list, libpath)
+
+        unique!(filter!(!isempty, path))
+        unique!(filter!(!isempty, libpath))
+
+        git_cmd = addenv(git_cmd, "PATH" => join(path, pathsep), LIBPATH_env => join(libpath, pathsep))
+    end
+
+    return git_cmd
 end
 
 function git(args::AbstractVector{<:AbstractString}; kwargs...)
