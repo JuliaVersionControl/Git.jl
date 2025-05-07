@@ -56,10 +56,15 @@ function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
         path = split(get(ENV, "PATH", ""), pathsep)
         libpath = split(get(ENV, LIBPATH_env, ""), pathsep)
 
-        path = vcat(dirname(OpenSSH_jll.ssh_path), path)
-        libpath = vcat(OpenSSH_jll.LIBPATH_list, libpath)
-        path = vcat(dirname(Git_jll.git_path), path)
-        libpath = vcat(Git_jll.LIBPATH_list, libpath)
+        @static if Sys.iswindows()
+            # Windows: we append OpenSSH_jll to the end of PATH
+            path = vcat(dirname(Git_jll.git_path), path, dirname(OpenSSH_jll.ssh_path))
+            libpath = vcat(Git_jll.LIBPATH_list, libpath, OpenSSH_jll.LIBPATH_list)
+        else
+            # All other platforms: we prepend OpenSSH_jll to the begining of PATH
+            path = vcat(dirname(Git_jll.git_path), dirname(OpenSSH_jll.ssh_path), path)
+            libpath = vcat(Git_jll.LIBPATH_list, OpenSSH_jll.LIBPATH_list, libpath)
+        end
 
         unique!(filter!(!isempty, path))
         unique!(filter!(!isempty, libpath))
