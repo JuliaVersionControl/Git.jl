@@ -71,3 +71,29 @@ end
         @test dir1_log == dir2_log
     end; end
 end
+
+# https://github.com/JuliaVersionControl/Git.jl/issues/51
+
+@testset "OpenSSH integration" begin
+    is_ci = parse(Bool, strip(get(ENV, "CI", "false")))
+    if is_ci
+        withtempdir() do sshprivkeydir
+            privkey_filepath = joinpath(sshprivkeydir, "my_private_key")
+            open(privkey_filepath, "w") do io
+                ssh_privkey = ENV["CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY"]
+                println(io, ssh_privkey)
+            end # open
+            withenv("GIT_SSH_COMMAND" => "ssh -i \"$(privkey_filepath)\"") do
+                withtempdir() do workdir
+                    cd(workdir) do
+                        @test !isdir("Git.jl")
+                        @test !isfile(joinpath("Git.jl", "Project.toml"))
+                        @test success(`$(git()) clone --depth=1 git@github.com:JuliaVersionControl/Git.jl.git`)
+                        @test isdir("Git.jl")
+                        @test isfile(joinpath("Git.jl", "Project.toml"))
+                    end # cd
+                end # withtempdir/workdir
+            end # withenv
+        end # withtempdir/sshprivkeydir
+    end # if
+end # testset
