@@ -84,6 +84,8 @@ end
                 ssh_privkey = ENV["CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY"]
                 println(io, ssh_privkey)
             end # open
+            # We need to chmod our private key to 600, or SSH will ignore it.
+            chmod(privkey_filepath, 0o600)
             withenv("GIT_SSH_COMMAND" => "ssh -vvv -i \"$(privkey_filepath)\"") do
                 withtempdir() do workdir
                     @test !isdir("Git.jl")
