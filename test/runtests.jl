@@ -88,7 +88,9 @@ end
                 withtempdir() do workdir
                     @test !isdir("Git.jl")
                     @test !isfile(joinpath("Git.jl", "Project.toml"))
-                    @test success(`$(git()) clone --depth=1 git@github.com:JuliaVersionControl/Git.jl.git`)
+                    # We use `run()` so that we can see the stdout and stderr in the CI logs:
+                    proc = run(`$(git()) clone --depth=1 git@github.com:JuliaVersionControl/Git.jl.git`)
+                    @test success(proc)
                     @test isdir("Git.jl")
                     @test isfile(joinpath("Git.jl", "Project.toml"))
                 end # withtempdir/workdir
