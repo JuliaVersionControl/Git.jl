@@ -58,6 +58,8 @@ function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
 
         path = vcat(dirname(OpenSSH_jll.ssh_path), path)
         libpath = vcat(OpenSSH_jll.LIBPATH_list, libpath)
+        path = vcat(dirname(Git_jll.git_path), path)
+        libpath = vcat(Git_jll.LIBPATH_list, libpath)
 
         unique!(filter!(!isempty, path))
         unique!(filter!(!isempty, libpath))
