@@ -23,20 +23,36 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.6'
+          - 'min'
           - '1'
           - 'nightly'
         os:
           - ubuntu-latest
-          - macos-latest
+          - macos-13
           - windows-latest
         arch:
           - x64
           - x86
         # 32-bit Julia binaries are not available on macOS
         exclude:
-          - os: macOS-latest
+          - os: macOS-13
             arch: x86
+        include:
+          - os: macOS-latest
+            arch: 'default'
+            version: '1'
+          - os: macOS-latest
+            arch: 'default'
+            version: 'nightly'
+          - os: ubuntu-22.04-arm
+            arch: 'default'
+            version: 'min'
+          - os: ubuntu-22.04-arm
+            arch: 'default'
+            version: '1'
+          - os: ubuntu-22.04-arm
+            arch: 'default'
+            version: 'nightly'
     steps:
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@v1
@@ -49,4 +65,4 @@ jobs:
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v1
         with:
-          file: lcov.info
+          files: lcov.info

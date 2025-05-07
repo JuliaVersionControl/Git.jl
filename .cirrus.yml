@@ -9,24 +9,6 @@ task:
         # - JULIA_VERSION: 1.6 # Has problems with libcurl
         - JULIA_VERSION: 1
         # - JULIA_VERSION: nightly # not available
-    - name: Linux ARMv8
-      arm_container:
-        image: ubuntu:latest
-      env:
-        JULIA_PKG_SERVER_REGISTRY_PREFERENCE: eager
-        matrix:
-        - JULIA_VERSION: 1.6
-        - JULIA_VERSION: 1
-        - JULIA_VERSION: nightly
-    - name: MacOS M1
-      macos_instance:
-        image: ghcr.io/cirruslabs/macos-monterey-base:latest
-      env:
-        JULIA_PKG_SERVER_REGISTRY_PREFERENCE: eager
-        matrix:
-        # - JULIA_VERSION: 1.6 # not available
-        - JULIA_VERSION: 1
-        - JULIA_VERSION: nightly
 
   allow_failures: $JULIA_VERSION == 'nightly'
   install_script: |
