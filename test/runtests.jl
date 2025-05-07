@@ -77,6 +77,7 @@ end
 @testset "OpenSSH integration" begin
     is_ci = parse(Bool, strip(get(ENV, "CI", "false")))
     if is_ci
+        @info "This is CI, so running the OpenSSH test..."
         withtempdir() do sshprivkeydir
             privkey_filepath = joinpath(sshprivkeydir, "my_private_key")
             open(privkey_filepath, "w") do io
@@ -93,5 +94,8 @@ end
                 end # withtempdir/workdir
             end # withenv
         end # withtempdir/sshprivkeydir
+    else
+        # Mark this test as skipped if we are not running in CI
+        @test_skip false
     end # if
 end # testset
