@@ -73,7 +73,6 @@ end
 end
 
 # https://github.com/JuliaVersionControl/Git.jl/issues/51
-
 @testset "OpenSSH integration" begin
     is_ci = parse(Bool, strip(get(ENV, "CI", "false")))
     if is_ci
