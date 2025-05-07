@@ -52,7 +52,7 @@ function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
     end
 
     # Use OpenSSH from the JLL: <https://github.com/JuliaVersionControl/Git.jl/issues/51>.
-    if OpenSSH_jll.is_available()
+    if !Sys.iswindows() && OpenSSH_jll.is_available()
         path = split(get(ENV, "PATH", ""), pathsep)
         libpath = split(get(ENV, LIBPATH_env, ""), pathsep)
 
