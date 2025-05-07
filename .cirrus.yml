@@ -49,5 +49,5 @@ task:
     - cirrusjl build
   test_script:
     - cirrusjl test
-  coverage_script:
-    - cirrusjl coverage codecov
+  # coverage_script:
+  #   - cirrusjl coverage codecov
