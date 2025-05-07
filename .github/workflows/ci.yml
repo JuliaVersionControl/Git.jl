@@ -61,11 +61,14 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
-      - name: On Linux only, add Github.com known hosts (from GitHub API over HTTPS)
+      - uses: dcarbone/install-jq-action@v3
+        if: runner.os == 'Linux' || runner.os == 'Windows'
+      - name: On Linux and Windows, add Github.com known hosts (from GitHub API over HTTPS)
+        shell: bash
         run: |
           mkdir -p ~/.ssh
           curl --silent https://api.github.com/meta | jq --raw-output '"github.com "+.ssh_keys[]' >> ~/.ssh/known_hosts
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' || runner.os == 'Windows'
       - uses: julia-actions/julia-runtest@v1
         env:
           CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY: ${{ secrets.CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY }}
