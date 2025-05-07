@@ -75,8 +75,9 @@ end
 # https://github.com/JuliaVersionControl/Git.jl/issues/51
 @testset "OpenSSH integration" begin
     is_ci = parse(Bool, strip(get(ENV, "CI", "false")))
-    if is_ci
-        @info "This is CI, so running the OpenSSH test..."
+    is_gha = parse(Bool, strip(get(ENV, "GITHUB_ACTIONS", "false")))
+    if is_ci && is_gha
+        @info "This is GitHub Actions CI, so running the OpenSSH test..."
         mktempdir() do sshprivkeydir
             privkey_filepath = joinpath(sshprivkeydir, "my_private_key")
             open(privkey_filepath, "w") do io
@@ -85,7 +86,11 @@ end
             end # open
             # We need to chmod our private key to 600, or SSH will ignore it.
             chmod(privkey_filepath, 0o600)
-            withenv("GIT_SSH_COMMAND" => "ssh -vvv -i \"$(privkey_filepath)\"") do
+
+            ssh_verbose = "-vvv" # comment this line back out when you are finished debugging
+            # ssh_verbose = "" # uncomment this line when you are finished debugging
+
+            withenv("GIT_SSH_COMMAND" => "ssh $(ssh_verbose) -i \"$(privkey_filepath)\"") do
                 withtempdir() do workdir
                     @test !isdir("Git.jl")
                     @test !isfile(joinpath("Git.jl", "Project.toml"))
