@@ -78,7 +78,7 @@ end
     is_ci = parse(Bool, strip(get(ENV, "CI", "false")))
     if is_ci
         @info "This is CI, so running the OpenSSH test..."
-        withtempdir() do sshprivkeydir
+        mktempdir() do sshprivkeydir
             privkey_filepath = joinpath(sshprivkeydir, "my_private_key")
             open(privkey_filepath, "w") do io
                 ssh_privkey = ENV["CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY"]
