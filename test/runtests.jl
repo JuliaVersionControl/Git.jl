@@ -87,8 +87,8 @@ end
             # We need to chmod our private key to 600, or SSH will ignore it.
             chmod(privkey_filepath, 0o600)
 
-            ssh_verbose = "-vvv" # comment this line back out when you are finished debugging
-            # ssh_verbose = "" # uncomment this line when you are finished debugging
+            # ssh_verbose = "-vvv" # comment this line back out when you are finished debugging
+            ssh_verbose = "" # uncomment this line when you are finished debugging
 
             withenv("GIT_SSH_COMMAND" => "ssh $(ssh_verbose) -i \"$(privkey_filepath)\"") do
                 withtempdir() do workdir
