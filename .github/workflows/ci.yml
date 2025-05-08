@@ -2,8 +2,6 @@ name: CI
 
 on:
   pull_request:
-    branches:
-      - master
   push:
     branches:
       - master
@@ -61,7 +59,15 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
+      - name: On Linux and Windows, ssh-keyscan github.com and store in known-hosts
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+        if: runner.os == 'Linux' || runner.os == 'Windows'
       - uses: julia-actions/julia-runtest@v1
+        env:
+          CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY: ${{ secrets.CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY }}
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v5
         with:
