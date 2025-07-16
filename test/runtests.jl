@@ -90,13 +90,12 @@ end
 @testset "OpenSSH integration" begin
     is_ci = parse(Bool, strip(get(ENV, "CI", "false")))
     is_gha = parse(Bool, strip(get(ENV, "GITHUB_ACTIONS", "false")))
-    has_privkey = "CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY" ∈ keys(ENV)
-    if is_ci && is_gha && has_privkey
+    ssh_privkey = get(ENV, "CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY", nothing)
+    if is_ci && is_gha && !isnothing(ssh_privkey)
         @info "This is GitHub Actions CI, so running the OpenSSH test..."
         mktempdir() do sshprivkeydir
             privkey_filepath = joinpath(sshprivkeydir, "my_private_key")
             open(privkey_filepath, "w") do io
-                ssh_privkey = ENV["CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY"]
                 println(io, ssh_privkey)
             end # open
             # We need to chmod our private key to 600, or SSH will ignore it.
