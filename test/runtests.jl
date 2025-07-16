@@ -90,7 +90,8 @@ end
 @testset "OpenSSH integration" begin
     is_ci = parse(Bool, strip(get(ENV, "CI", "false")))
     is_gha = parse(Bool, strip(get(ENV, "GITHUB_ACTIONS", "false")))
-    if is_ci && is_gha
+    has_privkey = "CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY" ∈ keys(ENV)
+    if is_ci && is_gha && has_privkey
         @info "This is GitHub Actions CI, so running the OpenSSH test..."
         mktempdir() do sshprivkeydir
             privkey_filepath = joinpath(sshprivkeydir, "my_private_key")
