@@ -79,6 +79,7 @@ function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
             git_cmd.env[idx][6:end]
         end
         path = vcat(dirname(Git_LFS_jll.git_lfs_path), path)
+        git_cmd = Cmd(git_cmd; windows_verbatim=true)
         git_cmd = addenv(git_cmd, "PATH" => join(path, pathsep))
     end
     return git_cmd
