@@ -53,8 +53,8 @@ function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
     end
 
     # Use OpenSSH from the JLL: <https://github.com/JuliaVersionControl/Git.jl/issues/51>.
-    path = split(get(ENV, "PATH", ""), pathsep)
     if !Sys.iswindows() && OpenSSH_jll.is_available()
+        path = split(get(ENV, "PATH", ""), pathsep)
         libpath = split(get(ENV, LIBPATH_env, ""), pathsep)
 
         path = vcat(dirname(OpenSSH_jll.ssh_path), path)
@@ -70,6 +70,14 @@ function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
 
     # Add git-lfs
     if Git_LFS_jll.is_available()
+        # Read path from git_cmd.env as it can be modified above
+        idx = findfirst(startswith("PATH="), git_cmd.env)
+        path = if isnothing(idx)
+            ""
+        else
+            # dropping the `PATH=` part
+            git_cmd.env[idx][6:end]
+        end
         path = vcat(dirname(Git_LFS_jll.git_lfs_path), path)
         git_cmd = addenv(git_cmd, "PATH" => join(path, pathsep))
     end
