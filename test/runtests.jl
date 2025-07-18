@@ -74,14 +74,12 @@ end
 
 # https://github.com/JuliaVersionControl/Git.jl/issues/51
 @testset "OpenSSH integration" begin
-    is_ci = parse(Bool, strip(get(ENV, "CI", "false")))
-    is_gha = parse(Bool, strip(get(ENV, "GITHUB_ACTIONS", "false")))
-    if is_ci && is_gha
-        @info "This is GitHub Actions CI, so running the OpenSSH test..."
+    ssh_privkey = get(ENV, "CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY", "")
+    if !isempty(ssh_privkey)
+        @info "CI private key available, so running the OpenSSH test..."
         mktempdir() do sshprivkeydir
             privkey_filepath = joinpath(sshprivkeydir, "my_private_key")
             open(privkey_filepath, "w") do io
-                ssh_privkey = ENV["CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY"]
                 println(io, ssh_privkey)
             end # open
             # We need to chmod our private key to 600, or SSH will ignore it.
