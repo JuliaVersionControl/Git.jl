@@ -79,16 +79,9 @@ function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
             git_cmd.env[idx][6:end]
         end
         path = vcat(dirname(Git_LFS_jll.git_lfs_path), path)
-        git_cmd = clean_cmd(git_cmd)
-        git_cmd = addenv(git_cmd, "PATH" => join(path, pathsep))
+        git_cmd = addenv(git_cmd, "PATH" => join(path, pathsep))::Cmd
     end
     return git_cmd
-end
-
-function clean_cmd(cmd::Cmd)
-    # Remove single quotes
-    exec = map(arg -> replace(arg, "'" => ""), cmd.exec)
-    return Cmd(Cmd(exec); env=cmd.env, dir=cmd.dir, ignorestatus=cmd.ignorestatus)
 end
 
 function git(args::AbstractVector{<:AbstractString}; kwargs...)
