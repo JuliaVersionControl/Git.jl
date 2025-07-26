@@ -51,6 +51,9 @@ jobs:
           - os: ubuntu-22.04-arm
             arch: 'default'
             version: 'nightly'
+          - os: windows-latest
+            arch: 'default'
+            version: '1.7.3'
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
