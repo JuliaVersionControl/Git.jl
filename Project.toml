@@ -12,7 +12,7 @@ OpenSSH_jll = "9bd350c2-7e96-507f-8002-3f2e150b4e1b"
 Git_jll = "2.44"
 JLLWrappers = "1.1"
 OpenSSH_jll = "9, 10"
-julia = "1.6"
+julia = "~1.6.6, 1.7.3"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
