@@ -22,6 +22,9 @@ julia> run(git(["clone", "https://github.com/JuliaRegistries/General"]))
 to bypass the parsing of the command string.
 """
 function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
+    path = split(get(ENV, "PATH", ""), pathsep)
+    libpath = split(get(ENV, LIBPATH_env, ""), pathsep)
+    
     git_cmd = @static if Sys.iswindows()
         Git_jll.git(; adjust_PATH, adjust_LIBPATH)::Cmd
     else
@@ -54,9 +57,6 @@ function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
 
     # Use OpenSSH from the JLL: <https://github.com/JuliaVersionControl/Git.jl/issues/51>.
     if !Sys.iswindows() && OpenSSH_jll.is_available()
-        path = split(get(ENV, "PATH", ""), pathsep)
-        libpath = split(get(ENV, LIBPATH_env, ""), pathsep)
-
         path = vcat(dirname(OpenSSH_jll.ssh_path), path)
         libpath = vcat(OpenSSH_jll.LIBPATH_list, libpath)
         path = vcat(dirname(Git_jll.git_path), path)
@@ -64,23 +64,16 @@ function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
 
         unique!(filter!(!isempty, path))
         unique!(filter!(!isempty, libpath))
-
-        git_cmd = addenv(git_cmd, "PATH" => join(path, pathsep), LIBPATH_env => join(libpath, pathsep))
     end
 
     # Add git-lfs
     if Git_LFS_jll.is_available()
-        # Read path from git_cmd.env as it can be modified above
-        idx = findfirst(startswith("PATH="), git_cmd.env)
-        path = if isnothing(idx)
-            ""
-        else
-            # dropping the `PATH=` part
-            git_cmd.env[idx][6:end]
-        end
         path = vcat(dirname(Git_LFS_jll.git_lfs_path), path)
-        git_cmd = addenv(git_cmd, "PATH" => join(path, pathsep))::Cmd
+        unique!(filter!(!isempty, path))
     end
+
+    git_cmd = addenv(git_cmd, "PATH" => join(path, pathsep), LIBPATH_env => join(libpath, pathsep))
+    
     return git_cmd
 end
 
