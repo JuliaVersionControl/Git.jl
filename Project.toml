@@ -1,14 +1,16 @@
 name = "Git"
 uuid = "d7ba0133-e1db-5d97-8f8c-041e4b3a1eb2"
-version = "1.4.0"
 authors = ["Dilum Aluthge", "contributors"]
+version = "1.5.0"
 
 [deps]
+Git_LFS_jll = "020c3dae-16b3-5ae5-87b3-4cb189e250b2"
 Git_jll = "f8c6e375-362e-5223-8a59-34ff63f689eb"
 JLLWrappers = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
 OpenSSH_jll = "9bd350c2-7e96-507f-8002-3f2e150b4e1b"
 
 [compat]
+Git_LFS_jll = "3.7"
 Git_jll = "2.44"
 JLLWrappers = "1.1"
 OpenSSH_jll = "9, 10"

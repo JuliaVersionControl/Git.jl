@@ -8,7 +8,9 @@ not need to have Git installed on your computer, and neither do the users of
 your packages!
 
 Git.jl provides a Git binary via
-[Git_jll.jl](https://github.com/JuliaBinaryWrappers/Git_jll.jl).
+[Git_jll.jl](https://github.com/JuliaBinaryWrappers/Git_jll.jl)
+and a Git LFS binary for large file support via
+[Git_LFS_jll.jl](https://github.com/JuliaBinaryWrappers/Git_LFS_jll.jl).
 The latest version of Git.jl requires at least Julia 1.6.
 
 Git.jl is intended to work on any platform that supports Julia,

@@ -34,6 +34,20 @@ end
         @test isdir("Git.jl")
         @test isfile(joinpath("Git.jl", "Project.toml"))
     end
+
+    # git-lfs tests
+    withtempdir() do tmp_dir
+        rname = "repo-with-large-file-storage"
+        @test !isdir(rname)
+        @test !isfile(joinpath(rname, "LargeFile.zip"))
+        run(`$(git()) clone --quiet https://github.com/Apress/repo-with-large-file-storage`)
+        run(pipeline(`$(git()) -C $rname lfs install --local`; stdout=devnull))
+        run(pipeline(`$(git()) -C $rname lfs pull`; stdout=devnull))
+        @test isdir(rname)
+        @test isfile(joinpath(rname, "LargeFile.zip"))
+        # Test filesize to make sure we got real file and not small LFS pointer file
+        @test filesize(joinpath(rname, "LargeFile.zip")) > 10^6
+    end
 end
 
 @testset "Safety" begin
