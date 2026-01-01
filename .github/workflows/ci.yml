@@ -2,8 +2,6 @@ name: CI
 
 on:
   pull_request:
-    branches:
-      - master
   push:
     branches:
       - master
@@ -23,30 +21,58 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.6'
+          - 'min'
           - '1'
           - 'nightly'
         os:
           - ubuntu-latest
-          - macos-latest
+          - macos-15-intel
           - windows-latest
         arch:
           - x64
           - x86
         # 32-bit Julia binaries are not available on macOS
         exclude:
-          - os: macOS-latest
+          - os: macos-15-intel
             arch: x86
+        include:
+          - os: macOS-latest
+            arch: 'default'
+            version: '1'
+          - os: macOS-latest
+            arch: 'default'
+            version: 'nightly'
+          - os: ubuntu-22.04-arm
+            arch: 'default'
+            version: 'min'
+          - os: ubuntu-22.04-arm
+            arch: 'default'
+            version: '1'
+          - os: ubuntu-22.04-arm
+            arch: 'default'
+            version: 'nightly'
+          - os: windows-latest
+            arch: 'default'
+            version: '1.7.3'
     steps:
-      - uses: actions/checkout@v3
-      - uses: julia-actions/setup-julia@v1
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: julia-actions/cache@v1
+      - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
+      - name: On Linux and Windows, ssh-keyscan github.com and store in known-hosts
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+        if: runner.os == 'Linux' || runner.os == 'Windows'
       - uses: julia-actions/julia-runtest@v1
+        env:
+          CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY: ${{ secrets.CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY }}
       - uses: julia-actions/julia-processcoverage@v1
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v5
         with:
-          file: lcov.info
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}

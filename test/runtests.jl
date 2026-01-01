@@ -34,6 +34,20 @@ end
         @test isdir("Git.jl")
         @test isfile(joinpath("Git.jl", "Project.toml"))
     end
+
+    # git-lfs tests
+    withtempdir() do tmp_dir
+        rname = "repo-with-large-file-storage"
+        @test !isdir(rname)
+        @test !isfile(joinpath(rname, "LargeFile.zip"))
+        run(`$(git()) clone --quiet https://github.com/Apress/repo-with-large-file-storage`)
+        run(pipeline(`$(git()) -C $rname lfs install --local`; stdout=devnull))
+        run(pipeline(`$(git()) -C $rname lfs pull`; stdout=devnull))
+        @test isdir(rname)
+        @test isfile(joinpath(rname, "LargeFile.zip"))
+        # Test filesize to make sure we got real file and not small LFS pointer file
+        @test filesize(joinpath(rname, "LargeFile.zip")) > 10^6
+    end
 end
 
 @testset "Safety" begin
@@ -71,3 +85,37 @@ end
         @test dir1_log == dir2_log
     end; end
 end
+
+# https://github.com/JuliaVersionControl/Git.jl/issues/51
+@testset "OpenSSH integration" begin
+    ssh_privkey = get(ENV, "CI_READONLY_DEPLOYKEY_FOR_CI_TESTSUITE_PRIVATEKEY", "")
+    if !isempty(ssh_privkey)
+        @info "CI private key available, so running the OpenSSH test..."
+        mktempdir() do sshprivkeydir
+            privkey_filepath = joinpath(sshprivkeydir, "my_private_key")
+            open(privkey_filepath, "w") do io
+                println(io, ssh_privkey)
+            end # open
+            # We need to chmod our private key to 600, or SSH will ignore it.
+            chmod(privkey_filepath, 0o600)
+
+            # ssh_verbose = "-vvv" # comment this line back out when you are finished debugging
+            ssh_verbose = "" # uncomment this line when you are finished debugging
+
+            withenv("GIT_SSH_COMMAND" => "ssh $(ssh_verbose) -i \"$(privkey_filepath)\"") do
+                withtempdir() do workdir
+                    @test !isdir("Git.jl")
+                    @test !isfile(joinpath("Git.jl", "Project.toml"))
+                    # We use `run()` so that we can see the stdout and stderr in the CI logs:
+                    proc = run(`$(git()) clone --depth=1 git@github.com:JuliaVersionControl/Git.jl.git`)
+                    @test success(proc)
+                    @test isdir("Git.jl")
+                    @test isfile(joinpath("Git.jl", "Project.toml"))
+                end # withtempdir/workdir
+            end # withenv
+        end # withtempdir/sshprivkeydir
+    else
+        # Mark this test as skipped if we are not running in CI
+        @test_skip false
+    end # if
+end # testset
