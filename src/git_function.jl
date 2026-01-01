@@ -37,7 +37,7 @@ function git(; adjust_PATH::Bool = true, adjust_LIBPATH::Bool = true)
         share_git_core = joinpath(share, "git-core")
         share_git_core_templates = joinpath(share_git_core, "templates")
 
-        ssl_cert = joinpath(dirname(Sys.BINDIR), "share", "julia", "cert.pem")
+        ssl_cert = NetworkOptions.ca_roots_path()
 
         env_mapping = Dict{String,String}()
         env_mapping["GIT_EXEC_PATH"]    = libexec_git_core
