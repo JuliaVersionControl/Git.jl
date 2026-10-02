@@ -58,6 +58,22 @@ end
     @test orig_templatedir == get_env("GIT_TEMPLATE_DIR")
 end
 
+# https://github.com/JuliaVersionControl/Git.jl/issues/41
+@testset "CA roots" begin
+    cainfo(cmd) = only(e[length("GIT_SSL_CAINFO=")+1:end] for e in cmd.env
+                       if startswith(e, "GIT_SSL_CAINFO="))
+    if Sys.iswindows()
+        @test_skip false
+    else
+        withenv("GIT_SSL_CAINFO" => nothing, "JULIA_SSL_CA_ROOTS_PATH" => "/my/ca.pem") do
+            @test cainfo(git()) == "/my/ca.pem"
+        end
+        withenv("GIT_SSL_CAINFO" => "/user/ca.pem", "JULIA_SSL_CA_ROOTS_PATH" => "/my/ca.pem") do
+            @test cainfo(git()) == "/user/ca.pem"
+        end
+    end
+end
+
 # This makes sure the work around for the SIP restrictions on macOS
 # (<https://github.com/JuliaVersionControl/Git.jl/issues/40>) works correctly.  While SIP is
 # a macOS-specific issue, it's good to exercise this code path everywhere.
